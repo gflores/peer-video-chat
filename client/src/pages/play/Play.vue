@@ -29,6 +29,10 @@
 
     .debug(@) debug
     button(@click="logout()") Logout
+    textarea {{myData}}
+    textarea#otherId(v-model="otherId")
+    button#connect(@click="signal()") Connect
+    button#send(@click="sendMsg()") Send msg
 
     
 
@@ -38,6 +42,10 @@
 import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
 import store from "store";
 import GamePlayArea from "./GamePlayArea";
+import Peer from "simple-peer";
+
+
+let peer;
 
 export default {
   components: {
@@ -46,9 +54,19 @@ export default {
   data() {
     return {
       isDataReady: false,
+      myData: "",
+      otherId: "",
     };
   },
   async created() {
+    peer = new Peer({
+      initiator: this.isAdmin, trickle: true
+    });
+    peer.on('signal', data => {
+      console.log("SIGNAL: ", JSON.stringify(data));
+      // this.myData = JSON.stringify(data);
+    });
+
     playRoomOn("user-joined-room", data => {
       console.log("user-joined-room: ", data);
     });
@@ -77,6 +95,14 @@ export default {
     this.isDataReady = true;
   },
   methods: {
+    async signal() {
+      console.log("peer: ", peer);
+      peer.signal(JSON.parse(this.otherId));
+    },
+    async sendMsg() {
+      console.log("peer: ", peer);
+      peer.send('pleaseBro');
+    },
     async debug() {
       playRoomEmit("debug", {}, ({socket}) => {
         console.log("socket: ", socket)
@@ -84,7 +110,7 @@ export default {
     },
     async joinAsPlayer() {
       return new Promise(resolve => {
-        playRoomEmit("join-room", {roomId: this.roomId}, ({room, user, message}, isSuccess) => {
+        playRoomEmit("join-room", {roomId: this.roomId, isAdmin: this.isAdmin, rtcData: "rtcdata"}, ({room, user, message}, isSuccess) => {
           if (isSuccess == false) {
             console.log(message);
             return ;
@@ -115,7 +141,15 @@ export default {
   computed: {
     roomId() {
       return this.$route.params.roomId
-    }
+    },
+    role() {
+      return this.$route.params.role
+    },
+    isAdmin() {
+      return this.role == "admin";
+    },
+
+
   }
 }
 </script>

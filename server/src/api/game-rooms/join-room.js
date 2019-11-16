@@ -23,6 +23,10 @@ function constructNewRoom(roomId) {
   let room;
   room = {
     roomId: roomId,
+
+    admin: null,
+    client: null,
+
     players: [],
     spectators: [],
     canDuelAction: false,
@@ -35,21 +39,15 @@ function constructNewRoom(roomId) {
     constructSnapshotMessage() {
       return {
         roomId: room.roomId,
-        players: room.players.map(p => filterUser(p)),
-        spectators: room.spectators.map(s => filterUser(s)),
-        canDuelAction: room.canDuelAction,
-        isGameLaunched: room.isGameLaunched,
-        isGameEnded: room.isGameEnded,
-        currentRoundStartTime: room.currentRoundStartTime,
-        winner: room.winner,
-        loser: room.loser
+        admin: room.admin,
+        client: room.client
       };
     }
   };
 
   return room
 }
-async function onJoinRoom({roomId}, authToken, responseCb) {
+async function onJoinRoom({roomId, isAdmin, rtcData}, authToken, responseCb) {
   console.log("authToken: ", authToken);
   let user = await Users.findOne({authToken});
   let room;
@@ -69,14 +67,18 @@ async function onJoinRoom({roomId}, authToken, responseCb) {
     room = rooms[roomId];
     this.join('room#' + roomId);
 
-    if (room.players.length < 2) {
-      room.players.push(user);
-      if (room.players.length == 2) {
-        launchGame(room);
-      }
-    } else if (room.players.length == 2) {
-      room.spectators.push(user);
+    if (isAdmin == true && room.admin == null) {
+      room.admin = rtcData;
+    } else if (isAdmin == false && room.client == null) {
+      room.client = rtcData;
+    } else {
+      console.log("that spot is already taken");
     }
+    if (room.admin != null && room.client != null) {
+      console.log("LAUNCH");
+      // launchGame(room);
+    }
+
     this.room = room;
     this.user = user;
     
