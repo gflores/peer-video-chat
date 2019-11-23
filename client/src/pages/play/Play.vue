@@ -29,10 +29,11 @@
 
     .debug(@) debug
     button(@click="logout()") Logout
-    textarea {{myData}}
+
     textarea#otherId(v-model="otherId")
     button#connect(@click="signal()") Connect
-    button#send(@click="sendMsg()") Send msg
+
+    video(muted="muted")
 
     
 
@@ -42,8 +43,9 @@
 import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
 import store from "store";
 import GamePlayArea from "./GamePlayArea";
-import Peer from "simple-peer";
+import SimplePeer from "simple-peer";
 
+window.playRoomEmit = playRoomEmit;
 
 let peer;
 
@@ -59,12 +61,24 @@ export default {
     };
   },
   async created() {
-    peer = new Peer({
-      initiator: this.isAdmin, trickle: true
-    });
-    peer.on('signal', data => {
-      console.log("SIGNAL: ", JSON.stringify(data));
-      // this.myData = JSON.stringify(data);
+    // peer = new Peer({
+    //   initiator: this.isAdmin, trickle: true
+    // });
+    // peer.on('signal', data => {
+    //   console.log("SIGNAL: ", JSON.stringify(data));
+    //   // this.myData = JSON.stringify(data);
+    // });
+
+    playRoomOn("signal-emitted", (isAdmin, data) => {
+      if (this.isAdmin == isAdmin) {
+        return ;
+      }
+      console.log("signal-emitted data: ", data);
+      if (this.isAdmin) {
+        peer.signal(data.client.playerData.signal);
+      } else if (this.isAdmin == false) {
+        peer.signal(data.admin.playerData.signal);
+      }
     });
 
     playRoomOn("user-joined-room", data => {
@@ -91,17 +105,57 @@ export default {
     // await Promise.all([
     //   this.storeMyProfile()
     // ]);
+    await this.simplePeerSetupClient();
     await this.guestJoinAsPlayer();
+    console.log("guestJoinAsPlayer");
     this.isDataReady = true;
+    await this.simplePeerSetupAdmin();
   },
   methods: {
+    async simplePeerSetupAdmin() {
+      if (this.isAdmin) {
+        let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+        peer = new SimplePeer({ initiator: true, trickle: true, stream: stream});
+
+        peer.on('error', err => console.log('error', err))
+        peer.on('signal', signal => {
+          console.log('SIGNAL:  ', JSON.stringify(signal))
+          playRoomEmit("submit-signal", {signal: signal}, () => {
+            console.log("emitted");
+          })
+          console.log('WTF')
+        });
+      }
+    },
+    async simplePeerSetupClient() {
+      if (this.isAdmin == false) {
+        peer = new SimplePeer({initiator: false, trickle: false});
+        peer.on('stream', stream => {
+          console.log("receveing the vid");
+          // got remote video stream, now let's show it in a video tag
+          var video = document.querySelector('video')
+      
+          if ('srcObject' in video) {
+            video.srcObject = stream
+          } else {
+            video.src = window.URL.createObjectURL(stream) // for older browsers
+          }
+      
+          video.play();
+          video.muted = false
+        });
+
+        peer.on('error', err => console.log('error', err))
+        peer.on('signal', signal => {
+          console.log('SIGNAL:  ', JSON.stringify(signal))
+          playRoomEmit("submit-signal", {signal: signal})
+        });
+      }
+    },
     async signal() {
       console.log("peer: ", peer);
       peer.signal(JSON.parse(this.otherId));
-    },
-    async sendMsg() {
-      console.log("peer: ", peer);
-      peer.send('pleaseBro');
     },
     async debug() {
       playRoomEmit("debug", {}, ({socket}) => {
@@ -119,6 +173,11 @@ export default {
           console.log("user is: ", user)
           this.setRoom(room);
           this.setUser(user);
+          if (this.isAdmin == false) {
+            if (room.admin && room.admin.playerData.signal != null) {
+              peer.signal(room.admin.playerData.signal);
+            }
+          }
           resolve();
         });
       })

@@ -13,6 +13,7 @@ async function apiRequest(path, data) {
 }
 
 function playRoomEmit(handleName, data, callback) {
+  console.log("emitting: ", handleName);
   playRoomSocket.emit(handleName, data, store.get("authToken"), callback);
 }
 

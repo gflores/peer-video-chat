@@ -60,6 +60,10 @@ async function onJoinRoom({roomId, isAdmin, rtcData}, authToken, responseCb) {
   if (isUserInARoom(user) == false) {
     addUserToRoom(user, roomId)
     user.currentRoom = roomId;
+    user.playerData = {
+      signal: null,
+      isAdmin: isAdmin
+    };
 
     if (rooms[roomId] == null) {
       rooms[roomId] = constructNewRoom(roomId);
@@ -67,12 +71,13 @@ async function onJoinRoom({roomId, isAdmin, rtcData}, authToken, responseCb) {
     room = rooms[roomId];
     this.join('room#' + roomId);
 
+    room.players.push(user);
     if (isAdmin == true && room.admin == null) {
-      room.admin = rtcData;
+      room.admin = user;
     } else if (isAdmin == false && room.client == null) {
-      room.client = rtcData;
+      room.client = user;
     } else {
-      console.log("that spot is already taken");
+      console.log("there is already someone in that spot isAdmin: ", isAdmin);
     }
     if (room.admin != null && room.client != null) {
       console.log("LAUNCH");
@@ -87,6 +92,7 @@ async function onJoinRoom({roomId, isAdmin, rtcData}, authToken, responseCb) {
     console.log("user is already in the room");
     let info = getPlayInfoFromUser(user);
     user.playerData = info.player;
+    user.playerData.signal = null;
     room = info.room;
 
     this.room = room;
