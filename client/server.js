@@ -1,5 +1,6 @@
 const express = require('express');
 var history = require('connect-history-api-fallback');
+const path = require("path");
 const https = require('https');
 const fs = require('fs');
 
