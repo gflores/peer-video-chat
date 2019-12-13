@@ -14,7 +14,7 @@ app.use(history({
 app.use(express.static(__dirname + '/dist'));
  
  
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 443;
 // app.listen(port, () => {
 //     console.log(`listening on ${port}`);
 // });
