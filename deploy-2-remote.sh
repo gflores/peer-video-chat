@@ -1,9 +1,27 @@
+git checkout master
 git pull
 
-cd ~/b_ank_app/server
+projectName="peer-video-chat"
+
+cd ~/$projectName/server
+rm -rf dist
 npm install
 npm run build
-pm2 restart b_ank_server
 
-cd ~/b_ank_app/client
-pm2 restart b_ank_client
+now=$(pm2 pid $projectName"_server")
+if [ -z $now ]; 
+then
+pm2 start dist/server.js --name $projectName"_server"
+else
+pm2 restart $projectName"_server"
+fi
+
+cd ~/$projectName/client
+npm install --production
+now=$(pm2 pid $projectName"_client")
+if [ -z $now ]; 
+then
+pm2 start server.js --name $projectName"_client"
+else
+pm2 restart $projectName"_client"
+fi
