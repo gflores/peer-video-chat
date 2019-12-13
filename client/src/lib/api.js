@@ -1,12 +1,14 @@
 import axios from "axios";
 import store from "store";
-let playRoomSocket = require('socket.io-client')('https://localhost:4000/play', {rejectUnauthorized: false});
+
+let host = `https://${location.host.split(":")[0]}:4000/`;
+let playRoomSocket = require('socket.io-client')(host + "play", {rejectUnauthorized: false});
 
 async function apiRequest(path, data) {
 
 
   try {
-    let res = await axios.post(`https://${location.host.split(":")[0]}:4000/` + path, data, {
+    let res = await axios.post(host + path, data, {
       headers: {
         "Authorization": store.get("authToken")
       }
