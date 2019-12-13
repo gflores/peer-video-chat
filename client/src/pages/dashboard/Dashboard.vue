@@ -18,6 +18,8 @@ export default {
     };
   },
   async created() {
+    await this.logAsGuestIf()
+
     await this.fetchAllData();
   },
   methods: {

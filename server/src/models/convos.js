@@ -3,9 +3,9 @@ import db from "~/src/db";
 /**
  * @typedef
  * @property {String} roomId
- * @property {String} name
- * @property {User} client
- * @property {User} admin
+ * @property {User} clientId
+ * @property {User} adminId
+ * @property {string} state {waiting, abandoned, in-conversation, ended-by-client, ended-by-admin}
  */
 
 

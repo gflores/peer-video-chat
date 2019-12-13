@@ -7,6 +7,7 @@ import db from "~/src/db";
  * @property {String} verificationToken used to verify the email of the user
  * @property {Boolean} isVerified whether the user is verified or not
  * @property {String} authToken the authToken of the user
+ * @property {String} currentConvoId the authToken of the user
  */
 
 const Users = db.get('users')

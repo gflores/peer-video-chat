@@ -1,0 +1,106 @@
+<template lang="pug">
+  section(v-if="isDataReady")
+    div ADMIN - Room is {{room.name}}
+    h3 Waiting clients:
+    div(v-for="convo in convos") {{convo.clientId}} {{convo.state}} {{convo.adminId}}
+    h3 Connected admins:
+    div(v-for="admin in room.admins") {{admin}}
+
+    <br><br><br><br><br>
+    div(v-if="store.connectedRoom == null")
+      p You haven't joined a room
+      button(@click="joinRoom()") Join Room
+
+    div(v-else)
+      p You have joined the room {{store.connectedRoom.name}}
+      button(@click="leaveRoom()") Leave Room
+
+      div(v-if="store.connectedConvo == null")
+        p Not having any conversation
+        button(@click="nextConvo()") Start Next Conversation
+      div(v-else)
+        p You are having conversation with: {{store.connectedConvo.clientId}}
+        button(@click="endConvo()") End Conversation
+
+
+
+</template>
+
+<script>
+import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
+import store from "store";
+import SimplePeer from "simple-peer";
+
+
+export default {
+  data() {
+    return {
+      isDataReady: false,
+      newRoomName: "",
+      room: null,
+      convos: []
+    };
+  },
+  async created() {
+    await this.logAsGuestIf()
+    await this.fetchAllData();
+    await playRoomEmit("setup-convos", {});
+    await this.simplePeerSetup();
+  },
+  methods: {
+    async fetchAllData() {
+      let [__, {room, convos}] = await Promise.all([
+        this.storeConnectedRoom(),
+        apiRequest("admin/get-room", {socketRoomId: this.socketRoomId})
+      ]);
+      this.room = room;
+      this.convos = convos;
+
+      this.isDataReady = true;
+    },
+    async simplePeerSetup() {
+      let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+      let peer = new SimplePeer({ initiator: true, trickle: true, stream: stream});
+
+      peer.on('error', err => console.log('error', err))
+      peer.on('signal', async signal => {
+        console.log('SIGNAL:  ', JSON.stringify(signal))
+        await playRoomEmit("transmit-signal", {signal: signal});
+        console.log('WTF')
+      });
+
+      playRoomOn("signal-emitted-to-admin", ({signal}) => {
+          peer.signal(signal);
+      });
+    },
+    async joinRoom() {
+      await apiRequest("admin/join-room", {
+        socketRoomId: this.socketRoomId
+        });
+      await this.fetchAllData();
+    },
+    async endConvo() {
+      await apiRequest("admin/end-convo", {});
+      await this.fetchAllData();
+    },
+    async nextConvo() {
+      await apiRequest("admin/next-convo", {});
+      await this.fetchAllData();
+    },
+    async leaveRoom() {
+      await apiRequest("admin/leave-room", {});
+      await this.fetchAllData();
+    },
+  },
+  computed: {
+    socketRoomId() {
+      return this.$route.params.socketRoomId
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+
+</style>
