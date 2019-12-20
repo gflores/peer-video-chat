@@ -41,7 +41,7 @@ export default {
       this.isDataReady = true;
     },
     async simplePeerSetup() {
-      let peer = new SimplePeer({initiator: false, trickle: false});
+      let peer = new SimplePeer({initiator: false, trickle: true});
       peer.on('stream', stream => {
         console.log("receveing the vid");
         // got remote video stream, now let's show it in a video tag
@@ -56,7 +56,6 @@ export default {
         video.play();
         video.muted = false
       });
-
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
         console.log('SIGNAL:  ', JSON.stringify(signal))
