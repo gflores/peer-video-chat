@@ -4,7 +4,10 @@
       input(v-model="newRoomName")
       button(@click="clickCreateNewRoom()") Create New
     .list
-      .item(v-for="room in rooms") {{room.name}}
+      .item(v-for="room in rooms")
+       router-link(:to="`play/${room.socketRoomId}/client`") {{room.name}}
+
+    
 </template>
 
 <script>

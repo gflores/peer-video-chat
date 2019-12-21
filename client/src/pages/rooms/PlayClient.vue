@@ -9,6 +9,10 @@
       video(muted="muted")
       button(@click="leaveRoom()") Leave Room
 
+      div(v-if="incomingSignals.length > 0")
+        p Someone is calling !
+        button(@click="acceptCall()") Answer Call
+
 </template>
 
 <script>
@@ -16,12 +20,15 @@ import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
 import store from "store";
 import SimplePeer from "simple-peer";
 
+let peer;
+
 export default {
   data() {
     return {
       isDataReady: false,
       newRoomName: "",
       room: null,
+      incomingSignals: []
     };
   },
   async created() {
@@ -41,9 +48,9 @@ export default {
       this.isDataReady = true;
     },
     async simplePeerSetup() {
-      let peer = new SimplePeer({initiator: false, trickle: true});
+      peer = new SimplePeer({initiator: false, trickle: false});
       peer.on('stream', stream => {
-        console.log("receveing the vid");
+        console.log("receiving the vid");
         // got remote video stream, now let's show it in a video tag
         var video = document.querySelector('video')
     
@@ -56,6 +63,7 @@ export default {
         video.play();
         video.muted = false
       });
+
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
         console.log('SIGNAL:  ', JSON.stringify(signal))
@@ -63,9 +71,15 @@ export default {
       });
 
       playRoomOn("signal-emitted-to-client", ({signal}) => {
-          peer.signal(signal);
+        this.incomingSignals.push(signal);
       });
+    },
+    async acceptCall() {
+      console.log("accepting: ", this.incomingSignals);
 
+      this.incomingSignals.forEach(sig => {
+        peer.signal(sig);
+      });
     },
     async joinRoom() {
       await apiRequest("client/join-convo", {

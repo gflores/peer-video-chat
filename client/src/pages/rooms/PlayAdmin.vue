@@ -22,6 +22,10 @@
         p You are having conversation with: {{store.connectedConvo.clientId}}
         button(@click="endConvo()") End Conversation
 
+        div(v-if="incomingSignal != null")
+          p Someone is calling !
+          button(@click="acceptCall()") Answer Call
+
 
 
 </template>
@@ -31,6 +35,7 @@ import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
 import store from "store";
 import SimplePeer from "simple-peer";
 
+let peer;
 
 export default {
   data() {
@@ -38,7 +43,8 @@ export default {
       isDataReady: false,
       newRoomName: "",
       room: null,
-      convos: []
+      convos: [],
+      incomingSignal: null
     };
   },
   async created() {
@@ -61,7 +67,7 @@ export default {
     async simplePeerSetup() {
       let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-      let peer = new SimplePeer({ initiator: true, trickle: true, stream: stream});
+      peer = new SimplePeer({ initiator: true, trickle: true, stream: stream});
 
       peer.on('error', err => console.log('error', err))
       peer.on('signal', async signal => {
@@ -71,8 +77,14 @@ export default {
       });
 
       playRoomOn("signal-emitted-to-admin", ({signal}) => {
-          peer.signal(signal);
+        this.incomingSignal = signal;
+          // peer.signal(signal);
       });
+    },
+    async acceptCall() {
+      console.log("accepting: ", this.incomingSignal);
+
+      peer.signal(this.incomingSignal);
     },
     async joinRoom() {
       await apiRequest("admin/join-room", {
