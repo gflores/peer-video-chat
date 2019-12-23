@@ -22,6 +22,12 @@ import SimplePeer from "simple-peer";
 
 let peer;
 
+var StunTurnList = {iceServers: [
+  {   urls: [ "stun:ss-turn1.xirsys.com" ]},
+  {   username: "uE3FkTOJyBFzrPPzJUw0JniM6KKwnIFtAinZ-CylKuSe__JnRsK_dgCNGl_5uRWKAAAAAF39EHVnZmxvcmVz",   credential: "1f2c1b94-2355-11ea-bc46-7a7a3a22eac8",   urls: [       "turn:ss-turn1.xirsys.com:80?transport=udp",       "turn:ss-turn1.xirsys.com:3478?transport=udp",       "turn:ss-turn1.xirsys.com:80?transport=tcp",       "turn:ss-turn1.xirsys.com:3478?transport=tcp",       "turns:ss-turn1.xirsys.com:443?transport=tcp",       "turns:ss-turn1.xirsys.com:5349?transport=tcp"   ]}
+]};
+
+
 export default {
   data() {
     return {
@@ -48,7 +54,7 @@ export default {
       this.isDataReady = true;
     },
     async simplePeerSetup() {
-      peer = new SimplePeer({initiator: false, trickle: false});
+      peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, iceTransportPolicy: 'relay'});
       peer.on('stream', stream => {
         console.log("receiving the vid");
         // got remote video stream, now let's show it in a video tag
