@@ -54,7 +54,7 @@ export default {
       this.isDataReady = true;
     },
     async simplePeerSetup() {
-      peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, iceTransportPolicy: 'relay'});
+      peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList});
       peer.on('stream', stream => {
         console.log("receiving the vid");
         // got remote video stream, now let's show it in a video tag

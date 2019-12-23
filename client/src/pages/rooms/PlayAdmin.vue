@@ -72,7 +72,7 @@ export default {
     async simplePeerSetup() {
       let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-      peer = new SimplePeer({ initiator: true, trickle: true, stream: stream, config: StunTurnList, iceTransportPolicy: 'relay'});
+      peer = new SimplePeer({ initiator: true, trickle: true, stream: stream, config: StunTurnList});
 
       peer.on('error', err => console.log('error', err))
       peer.on('signal', async signal => {
