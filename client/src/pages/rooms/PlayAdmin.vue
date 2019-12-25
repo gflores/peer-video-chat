@@ -34,6 +34,7 @@
 import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
 import store from "store";
 import SimplePeer from "simple-peer";
+import adapter from 'webrtc-adapter';
 
 let peer;
 
@@ -70,7 +71,14 @@ export default {
       this.isDataReady = true;
     },
     async simplePeerSetup() {
-      let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch (e) {
+        console.log("e: ", e);
+        stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      }
 
       peer = new SimplePeer({ initiator: true, trickle: true, stream: stream, config: StunTurnList});
 
