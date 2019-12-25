@@ -6,7 +6,7 @@
       button(@click="joinRoom()") Join Room
     div(v-else)
       p You are connected to the room: {{store.connectedRoom.name}}
-      video(muted="muted")
+      video(muted="muted" playsinline="playsinline")
       button(@click="leaveRoom()") Leave Room
 
       div(v-if="incomingSignals.length > 0")
