@@ -3,7 +3,6 @@ import Users from "~/src/models/users.js";
 import logger from './logger';
 import {sendRawEmail, sendHtmlEmail} from './mailer';
 import Logs from '~/src/models/logs';
-import {getPlayInfoFromUser} from "~/src/api/game-rooms/rooms";
 
 async function authMiddleware(req, res, next) {
   let authToken = req.get("Authorization");
@@ -16,9 +15,6 @@ async function authMiddleware(req, res, next) {
     return res.status(401).json({errorMessage: "Unauthorized Access"});
   }
   req.user = user;
-  let {room, player} = getPlayInfoFromUser(user);
-  req.room = room;
-  req.player = player;
 
   return next();
 }

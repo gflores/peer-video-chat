@@ -176,12 +176,32 @@ async function onTransmitSignal({signal}, authToken, responseCb) {
     return ;
   }
   let recipientRole = user.convoRole == "admin" ? "client" : "admin";
-  this.to("convo#" + user.currentConvoId).emit("signal-emitted-to-" + recipientRole, {signal});
+  this.to("convo#" + user.currentConvoId).emit(recipientRole + "/emit-signal", {signal});
+  responseCb("okay");
+}
+
+async function onClientRequestForSignal({}, authToken, responseCb) {
+  console.log("authToken: ", authToken);
+  let user = await Users.findOne({authToken});
+
+  if (user.convoRole != "client") {
+    console.log("Must be a client");
+    responseCb("NOT OK");
+    return ;
+  }
+  if (user.currentConvoId == null) {
+    console.log("You are not part of any conversation");
+    responseCb("NOT OK");
+    return ;
+  }
+
+  this.to("convo#" + user.currentConvoId).emit("admin/request-for-signal", {});
   responseCb("okay");
 }
 
 
 export {
   onSetupConvos,
-  onTransmitSignal
+  onTransmitSignal,
+  onClientRequestForSignal
 };

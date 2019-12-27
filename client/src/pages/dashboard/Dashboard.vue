@@ -6,6 +6,7 @@
     .list
       .item(v-for="room in rooms")
        router-link(:to="`play/${room.socketRoomId}/client`") {{room.name}}
+       router-link(:to="`play/${room.socketRoomId}/admin`") @#@
 
     
 </template>

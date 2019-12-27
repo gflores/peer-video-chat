@@ -77,13 +77,16 @@ export default {
         playRoomEmit("transmit-signal", {signal: signal})
       });
 
-      playRoomOn("signal-emitted-to-client", ({signal}) => {
+      playRoomOn("client/emit-signal", ({signal}) => {
+        console.log("OTHER SIGNAL: ", signal);
+
         this.incomingSignals.push(signal);
       });
+
+      playRoomEmit("client/request-for-signal", {})
+
     },
     async acceptCall() {
-      console.log("accepting: ", this.incomingSignals);
-
       this.incomingSignals.forEach(sig => {
         peer.signal(sig);
       });

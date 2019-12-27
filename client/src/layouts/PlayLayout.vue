@@ -1,7 +1,9 @@
-<template>
-  <div class="play-layout">
-    <component v-bind:is="page"></component>
-  </div>
+<template lang="pug">
+  .play-layout
+    router-link(to="/") Home
+    br
+    br
+    component(v-bind:is="page")
 </template>
 
 <script>
