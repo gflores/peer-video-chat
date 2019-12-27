@@ -84,6 +84,8 @@ export default {
       }
 
       peer = new SimplePeer({ initiator: true, trickle: true, stream: stream, config: StunTurnList});
+      window.thePeer = peer;
+      window.theStream = stream;
 
       peer.on('error', err => console.log('error', err))
       peer.on('signal', async signal => {
