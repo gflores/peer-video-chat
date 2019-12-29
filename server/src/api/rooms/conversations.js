@@ -15,6 +15,7 @@ app.post("/get-current-convo", authMiddleware, async (req, res) => {
     res.json({
       room
     });
+
   } else {
     let convo = await Convos.findOne({
       _id: req.user.currentConvoId,
@@ -51,6 +52,9 @@ app.post("/client/join-convo", authMiddleware, async (req, res) => {
     }
   });
 
+  playRoomSocket.to("room#" + room._id).emit("admin/notify-new-convo", {convo});
+  console.log("emit msg to room#", room._id);
+
   res.json({
     convo,
     room
@@ -74,12 +78,13 @@ app.post("/client/leave-convo", authMiddleware, async (req, res) => {
     }
   });
 
-  await Users.update({_id: req.user._id},
+  await Users.update({_id: {$in: [convo.clientId, convo.adminId]}},
     {$set: {
       currentConvoId: null,
       convoRole: null  
-    }
-  });
+    }},
+    {multi: true}
+  );
 
   res.json({
     message: "Success"
@@ -97,18 +102,20 @@ app.post("/admin/end-convo", authMiddleware, async (req, res) => {
   }
   
   let convo = await Convos.findOne({_id: req.user.currentConvoId});
-  await Convos.update({_id: convo._id}, {
-    $set: {
-      state: convo.state == "ended-by-admin"
-    }
-  });
-
-  await Users.update({_id: req.user._id},
-    {$set: {
-      currentConvoId: null,
-      convoRole: null  
-    }
-  });
+  await Promise.all([
+    Convos.update({_id: convo._id}, {
+      $set: {
+        state: "ended-by-admin"
+      }
+    }),
+    Users.update({_id: {$in: [convo.clientId, convo.adminId]}},
+      {$set: {
+        currentConvoId: null,
+        convoRole: null  
+      }},
+      {multi: true}
+    )
+  ]);
 
   res.json({
     message: "Success"
@@ -155,19 +162,33 @@ app.post("/admin/next-convo", authMiddleware, async (req, res) => {
   });
 });
 
+async function onAdminJoinRoom({}, authToken, responseCb) {
+  console.log(`authToken: ${authToken}, Admin JOIN room`);
+  let user = await Users.findOne({authToken});
+
+
+  let room = await Rooms.findOne({
+    admins: user._id,
+  });
+  this.join("room#" + room._id);
+
+  responseCb("okay"); 
+}
 
 async function onSetupConvos({}, authToken, responseCb) {
-  console.log("authToken: ", authToken);
+  console.log(`onSetupConvos| authToken: ${authToken}`);
   let user = await Users.findOne({authToken});
 
   if (user.currentConvoId != null) {
     this.join("convo#" + user.currentConvoId);
+  } else {
+    console.log("onSetupConvos: not part of any convo");
   }
   responseCb("okay");
 }
 
 async function onTransmitSignal({signal}, authToken, responseCb) {
-  console.log("authToken: ", authToken);
+  console.log("onTransmitSignal| authToken: ", authToken);
   let user = await Users.findOne({authToken});
 
   if (user.currentConvoId == null) {
@@ -181,7 +202,7 @@ async function onTransmitSignal({signal}, authToken, responseCb) {
 }
 
 async function onClientRequestForSignal({}, authToken, responseCb) {
-  console.log("authToken: ", authToken);
+  console.log("onClientRequestForSignal| authToken: ", authToken);
   let user = await Users.findOne({authToken});
 
   if (user.convoRole != "client") {
@@ -199,9 +220,9 @@ async function onClientRequestForSignal({}, authToken, responseCb) {
   responseCb("okay");
 }
 
-
 export {
   onSetupConvos,
   onTransmitSignal,
-  onClientRequestForSignal
+  onClientRequestForSignal,
+  onAdminJoinRoom
 };

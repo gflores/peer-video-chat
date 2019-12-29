@@ -25,6 +25,9 @@
         div(v-if="incomingSignal != null")
           p Someone is calling !
           button(@click="acceptCall()") Answer Call
+        
+        button(@click="recordVideo = !recordVideo") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
+        button(@click="recordSound = !recordSound") {{recordSound ? "Turn Microphone OFF" : "Turn Microphone ON"}}
 
 
 
@@ -53,13 +56,20 @@ export default {
       newRoomName: "",
       room: null,
       convos: [],
-      incomingSignal: null
+      incomingSignal: null,
+      recordVideo: true,
+      recordSound: true,
+      socketConnectedToRoom: false,
+      socketConnectedToConvo: false
     };
   },
   async created() {
     await this.logAsGuestIf()
     await this.fetchAllData();
-    await playRoomEmit("setup-convos", {});
+    
+    await Promise.all([this.socketConnectToRoom(), this.socketConnectToConvo()]);
+
+    this.isDataReady = true;
     await this.simplePeerSetup();
   },
   methods: {
@@ -70,8 +80,24 @@ export default {
       ]);
       this.room = room;
       this.convos = convos;
+  
 
-      this.isDataReady = true;
+    },
+    async socketConnectToRoom() {
+      if (this.store.connectedRoom != null && this.socketConnectedToRoom == false) {
+        this.socketConnectedToRoom = true;
+        return playRoomEmit("admin/join-room", {});
+      }
+      
+      return Promise.resolve();
+    },
+    async socketConnectToConvo() {
+      if (this.store.connectedConvo != null && this.socketConnectedToConvo == false) {
+        this.socketConnectedToConvo = true;
+        return playRoomEmit("setup-convos", {});
+      }
+
+      return Promise.resolve();
     },
     async simplePeerSetup() {
 
@@ -91,17 +117,16 @@ export default {
       peer.on('signal', async signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
         mySignals.push(signal);
-        await playRoomEmit("transmit-signal", {signal: signal});
+
+        if (this.socketConnectedToConvo == true) {
+          await playRoomEmit("transmit-signal", {signal: signal});
+        }
       });
 
       // When receiving request to send signals again from client
       playRoomOn("admin/request-for-signal", ({}) => {
-        if (mySignals.length == 0) {
-          return ;
-        }
-        mySignals.forEach(s => {
-          playRoomEmit("transmit-signal", {signal: s});
-        })
+        console.log("receiving request-for-signal");
+        this.emitStoredSignals();
       });
 
       // When receiving signal from the client
@@ -109,7 +134,22 @@ export default {
         console.log("OTHER SIGNAL: ", signal);
         this.incomingSignal = signal;
       });
-      
+
+      // When client notify he created a convo
+      playRoomOn("admin/notify-new-convo", ({convo}) => {
+        console.log("NEW CONVO: ", convo);
+        this.convos.push(convo);
+      });
+
+    },
+    emitStoredSignals() {
+      if (mySignals.length == 0) {
+        return ;
+      }
+      for (let i = 0; i < mySignals.length; ++i) {
+        let sig = mySignals[i];
+        playRoomEmit("transmit-signal", {signal: sig});
+      }
     },
     async acceptCall() {
       peer.signal(this.incomingSignal);
@@ -117,8 +157,9 @@ export default {
     async joinRoom() {
       await apiRequest("admin/join-room", {
         socketRoomId: this.socketRoomId
-        });
+      });
       await this.fetchAllData();
+      await this.socketConnectToRoom();
     },
     async endConvo() {
       await apiRequest("admin/end-convo", {});
@@ -127,6 +168,8 @@ export default {
     async nextConvo() {
       await apiRequest("admin/next-convo", {});
       await this.fetchAllData();
+      await this.socketConnectToConvo();
+      this.emitStoredSignals();
     },
     async leaveRoom() {
       await apiRequest("admin/leave-room", {});

@@ -35,13 +35,17 @@ export default {
       isDataReady: false,
       newRoomName: "",
       room: null,
-      incomingSignals: []
+      incomingSignals: [],
+      socketConnectedToConvo: false
     };
   },
   async created() {
     await this.logAsGuestIf()
     await this.fetchAllData();
-    await playRoomEmit("setup-convos", {});
+
+    await this.socketConnectToConvo();
+
+    this.isDataReady = true;
     await this.simplePeerSetup();
   },
   methods: {
@@ -52,7 +56,6 @@ export default {
       ]);
       this.room = room;
 
-      this.isDataReady = true;
     },
     async simplePeerSetup() {
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList});
@@ -83,22 +86,37 @@ export default {
         this.incomingSignals.push(signal);
       });
 
-      playRoomEmit("client/request-for-signal", {})
+      if (this.socketConnectedToConvo == true) {
+        playRoomEmit("client/request-for-signal", {});
+      }
+    },
+    async socketConnectToConvo() {
+      console.log(`try connect to convo: ${this.store.connectedConvo != null} && ${this.socketConnectedToConvo == false}`);
+      if (this.store.connectedConvo != null && this.socketConnectedToConvo == false) {
+        this.socketConnectedToConvo = true;
+        return playRoomEmit("setup-convos", {});
+      }
 
+      return Promise.resolve();
     },
     async acceptCall() {
-      this.incomingSignals.forEach(sig => {
+      for (let i = 0; i < this.incomingSignals.length; ++i) {
+        let sig = this.incomingSignals[i];
         peer.signal(sig);
-      });
+      }
+      this.incomingSignals = [];
     },
     async joinRoom() {
       await apiRequest("client/join-convo", {
         socketRoomId: this.socketRoomId
         });
       await this.fetchAllData();
+      await this.socketConnectToConvo();
+      playRoomEmit("client/request-for-signal", {})
     },
     async leaveRoom() {
       await apiRequest("client/leave-convo", {});
+      this.socketConnectedToConvo = false;
       await this.fetchAllData();
     },
   },
