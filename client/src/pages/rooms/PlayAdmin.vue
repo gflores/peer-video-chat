@@ -60,13 +60,16 @@ export default {
       recordVideo: true,
       recordSound: true,
       socketConnectedToRoom: false,
-      socketConnectedToConvo: false
+      socketConnectedToConvo: false,
+      isConnectionEstablished: false
     };
   },
   async created() {
     await this.logAsGuestIf()
+    this.socketSetup();
+
     await this.fetchAllData();
-    
+
     await Promise.all([this.socketConnectToRoom(), this.socketConnectToConvo()]);
 
     this.isDataReady = true;
@@ -100,8 +103,9 @@ export default {
       return Promise.resolve();
     },
     async simplePeerSetup() {
-
       let stream;
+
+      this.isConnectionEstablished = false;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       } catch (e) {
@@ -113,7 +117,7 @@ export default {
       window.thePeer = peer;
       window.theStream = stream;
 
-      peer.on('error', err => console.log('error', err))
+      peer.on('error', err => console.log('peer error: ', err))
       peer.on('signal', async signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
         mySignals.push(signal);
@@ -122,11 +126,27 @@ export default {
           await playRoomEmit("transmit-signal", {signal: signal});
         }
       });
-
+    },
+    emitStoredSignals() {
+      if (mySignals.length == 0) {
+        return ;
+      }
+      for (let i = 0; i < mySignals.length; ++i) {
+        let sig = mySignals[i];
+        playRoomEmit("transmit-signal", {signal: sig});
+      }
+    },
+    socketSetup(){
       // When receiving request to send signals again from client
-      playRoomOn("admin/request-for-signal", ({}) => {
+      playRoomOn("admin/request-for-signal", async ({}) => {
         console.log("receiving request-for-signal");
-        this.emitStoredSignals();
+        
+        if (this.isConnectionEstablished == true) {
+          console.log("connection already established, reconstructing peer");
+          await this.simplePeerSetup();
+        } else {
+          this.emitStoredSignals();
+        }
       });
 
       // When receiving signal from the client
@@ -140,19 +160,11 @@ export default {
         console.log("NEW CONVO: ", convo);
         this.convos.push(convo);
       });
-
-    },
-    emitStoredSignals() {
-      if (mySignals.length == 0) {
-        return ;
-      }
-      for (let i = 0; i < mySignals.length; ++i) {
-        let sig = mySignals[i];
-        playRoomEmit("transmit-signal", {signal: sig});
-      }
     },
     async acceptCall() {
       peer.signal(this.incomingSignal);
+      this.isConnectionEstablished = true;
+      this.incomingSignal = null;
     },
     async joinRoom() {
       await apiRequest("admin/join-room", {

@@ -36,11 +36,13 @@ export default {
       newRoomName: "",
       room: null,
       incomingSignals: [],
-      socketConnectedToConvo: false
+      socketConnectedToConvo: false,
+      isConnectionEstablished: false
     };
   },
   async created() {
     await this.logAsGuestIf()
+    this.socketSetup();
     await this.fetchAllData();
 
     await this.socketConnectToConvo();
@@ -58,6 +60,8 @@ export default {
 
     },
     async simplePeerSetup() {
+      this.isConnectionEstablished = false;
+
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList});
       peer.on('stream', stream => {
         console.log("receiving the vid");
@@ -76,19 +80,23 @@ export default {
 
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
-        console.log('SIGNAL:  ', JSON.stringify(signal))
-        playRoomEmit("transmit-signal", {signal: signal})
+        console.log('MY SIGNAL:  ', JSON.stringify(signal))
+
+        this.isConnectionEstablished = true;
+
+        playRoomEmit("transmit-signal", {signal: signal});
       });
 
+      if (this.socketConnectedToConvo == true && this.incomingSignals.length == 0) {
+        playRoomEmit("client/request-for-signal", {});
+      }
+    },
+    socketSetup(){
       playRoomOn("client/emit-signal", ({signal}) => {
         console.log("OTHER SIGNAL: ", signal);
 
         this.incomingSignals.push(signal);
       });
-
-      if (this.socketConnectedToConvo == true) {
-        playRoomEmit("client/request-for-signal", {});
-      }
     },
     async socketConnectToConvo() {
       console.log(`try connect to convo: ${this.store.connectedConvo != null} && ${this.socketConnectedToConvo == false}`);
@@ -100,10 +108,15 @@ export default {
       return Promise.resolve();
     },
     async acceptCall() {
+      if (this.isConnectionEstablished == true) {
+        console.log("connection already established, reconstructing peer"); 
+        await this.simplePeerSetup();
+      }
       for (let i = 0; i < this.incomingSignals.length; ++i) {
         let sig = this.incomingSignals[i];
         peer.signal(sig);
       }
+      this.isConnectionEstablished = true;
       this.incomingSignals = [];
     },
     async joinRoom() {
