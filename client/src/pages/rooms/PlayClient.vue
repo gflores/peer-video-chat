@@ -37,7 +37,8 @@ export default {
       room: null,
       incomingSignals: [],
       socketConnectedToConvo: false,
-      isConnectionEstablished: false
+      isConnectionEstablished: false,
+      newIncomingSignals: []
     };
   },
   async created() {
@@ -94,8 +95,14 @@ export default {
     socketSetup(){
       playRoomOn("client/emit-signal", ({signal}) => {
         console.log("OTHER SIGNAL: ", signal);
+        this.newIncomingSignals.push(signal);
 
-        this.incomingSignals.push(signal);
+        setTimeout(() => {
+          if (this.newIncomingSignals.length != 0) {
+            this.incomingSignals = this.newIncomingSignals;
+            this.newIncomingSignals = [];
+          }
+        }, 2000);
       });
     },
     async socketConnectToConvo() {
@@ -112,6 +119,7 @@ export default {
         console.log("connection already established, reconstructing peer"); 
         await this.simplePeerSetup();
       }
+      console.log("Accepting: " + this.incomingSignals.length);
       for (let i = 0; i < this.incomingSignals.length; ++i) {
         let sig = this.incomingSignals[i];
         peer.signal(sig);

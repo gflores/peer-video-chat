@@ -17,14 +17,19 @@
 
       div(v-if="store.connectedConvo == null")
         p Not having any conversation
-        button(@click="nextConvo()") Start Next Conversation
+        div(v-if="waitingConvos.length > 0")
+          p Someone is Waiting !
+          button(@click="nextConvo()") Join Conversation
       div(v-else)
         p You are having conversation with: {{store.connectedConvo.clientId}}
         button(@click="endConvo()") End Conversation
 
-        div(v-if="incomingSignal != null")
-          p Someone is calling !
-          button(@click="acceptCall()") Answer Call
+        div(v-if="hasAcceptedCall == false")
+          button(@click="answerCall()") RECONNECT TO CONVERSATION !
+
+        //- div(v-if="incomingSignal != null")
+        //-   p Someone is calling !
+        //-   button(@click="acceptCall()") (old) acceptCall
         
         button(@click="recordVideo = !recordVideo") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
         button(@click="recordSound = !recordSound") {{recordSound ? "Turn Microphone OFF" : "Turn Microphone ON"}}
@@ -61,7 +66,8 @@ export default {
       recordSound: true,
       socketConnectedToRoom: false,
       socketConnectedToConvo: false,
-      isConnectionEstablished: false
+      isConnectionEstablished: false,
+      hasAcceptedCall: false
     };
   },
   async created() {
@@ -83,8 +89,6 @@ export default {
       ]);
       this.room = room;
       this.convos = convos;
-  
-
     },
     async socketConnectToRoom() {
       if (this.store.connectedRoom != null && this.socketConnectedToRoom == false) {
@@ -153,6 +157,7 @@ export default {
       playRoomOn("admin/emit-signal", ({signal}) => {
         console.log("OTHER SIGNAL: ", signal);
         this.incomingSignal = signal;
+        this.tryConnectIncomingSignal();
       });
 
       // When client notify he created a convo
@@ -161,10 +166,12 @@ export default {
         this.convos.push(convo);
       });
     },
-    async acceptCall() {
-      peer.signal(this.incomingSignal);
-      this.isConnectionEstablished = true;
-      this.incomingSignal = null;
+    async tryConnectIncomingSignal() {
+      if (this.hasAcceptedCall == true && this.incomingSignal != null) {
+        peer.signal(this.incomingSignal);
+        this.isConnectionEstablished = true;
+        this.incomingSignal = null;
+      }
     },
     async joinRoom() {
       await apiRequest("admin/join-room", {
@@ -180,6 +187,7 @@ export default {
     async nextConvo() {
       await apiRequest("admin/next-convo", {});
       await this.fetchAllData();
+      this.hasAcceptedCall = true;
       await this.socketConnectToConvo();
       this.emitStoredSignals();
     },
@@ -187,10 +195,17 @@ export default {
       await apiRequest("admin/leave-room", {});
       await this.fetchAllData();
     },
+    async answerCall(){
+      this.hasAcceptedCall = true;
+      this.tryConnectIncomingSignal();
+    }
   },
   computed: {
     socketRoomId() {
       return this.$route.params.socketRoomId
+    },
+    waitingConvos() {
+      return this.convos.filter(c => c.state == "waiting");
     }
   }
 }
