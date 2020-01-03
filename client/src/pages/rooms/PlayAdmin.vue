@@ -109,6 +109,7 @@ export default {
     async simplePeerSetup() {
       let stream;
 
+      mySignals = [];
       this.isConnectionEstablished = false;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -154,12 +155,17 @@ export default {
       });
 
       // When receiving signal from the client
-      playRoomOn("admin/emit-signal", ({signal}) => {
+      playRoomOn("admin/emit-signal", async ({signal}) => {
         console.log("OTHER SIGNAL: ", signal);
-        this.incomingSignal = signal;
-        this.tryConnectIncomingSignal();
-      });
 
+        if (this.isConnectionEstablished == true) {
+          console.log("connection already established, reconstructing peer");
+          await this.simplePeerSetup();
+        } else {
+          this.incomingSignal = signal;
+          this.tryConnectIncomingSignal();
+        }
+      });
       // When client notify he created a convo
       playRoomOn("admin/notify-new-convo", ({convo}) => {
         console.log("NEW CONVO: ", convo);

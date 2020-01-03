@@ -9,9 +9,13 @@
       video(muted="muted" playsinline="playsinline")
       button(@click="leaveRoom()") Leave Room
 
-      div(v-if="incomingSignals.length > 0")
-        p Someone is calling !
-        button(@click="acceptCall()") Answer Call
+      div(v-if="hasAcceptedCall == false")
+        button(@click="answerCall()") RECONNECT TO CONVERSATION !
+
+
+      //- div(v-if="incomingSignals.length > 0")
+      //-   p Someone is calling !
+      //-   button(@click="answerCall()") Answer Call
 
 </template>
 
@@ -38,7 +42,8 @@ export default {
       incomingSignals: [],
       socketConnectedToConvo: false,
       isConnectionEstablished: false,
-      newIncomingSignals: []
+      newIncomingSignals: [],
+      hasAcceptedCall: false
     };
   },
   async created() {
@@ -97,10 +102,11 @@ export default {
         console.log("OTHER SIGNAL: ", signal);
         this.newIncomingSignals.push(signal);
 
-        setTimeout(() => {
+        setTimeout(async () => {
           if (this.newIncomingSignals.length != 0) {
             this.incomingSignals = this.newIncomingSignals;
             this.newIncomingSignals = [];
+            await this.tryConnectIncomingSignal();
           }
         }, 2000);
       });
@@ -114,20 +120,26 @@ export default {
 
       return Promise.resolve();
     },
-    async acceptCall() {
-      if (this.isConnectionEstablished == true) {
-        console.log("connection already established, reconstructing peer"); 
-        await this.simplePeerSetup();
+    async tryConnectIncomingSignal() {
+      if (this.hasAcceptedCall == true && this.incomingSignals.length > 0) {
+        if (this.isConnectionEstablished == true) {
+          console.log("connection already established, reconstructing peer"); 
+          await this.simplePeerSetup();
+        }
+        console.log("Accepting: " + this.incomingSignals.length);
+        for (let i = 0; i < this.incomingSignals.length; ++i) {
+          let sig = this.incomingSignals[i];
+          peer.signal(sig);
+        }
+        this.incomingSignals = [];
       }
-      console.log("Accepting: " + this.incomingSignals.length);
-      for (let i = 0; i < this.incomingSignals.length; ++i) {
-        let sig = this.incomingSignals[i];
-        peer.signal(sig);
-      }
-      this.isConnectionEstablished = true;
-      this.incomingSignals = [];
+    },
+    async answerCall(){
+      this.hasAcceptedCall = true;
+      this.tryConnectIncomingSignal();
     },
     async joinRoom() {
+      this.hasAcceptedCall = true;
       await apiRequest("client/join-convo", {
         socketRoomId: this.socketRoomId
         });
