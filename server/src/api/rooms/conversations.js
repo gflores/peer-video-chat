@@ -172,6 +172,8 @@ async function onAdminJoinRoom({}, authToken, responseCb) {
   });
   this.join("room#" + room._id);
 
+  console.log("this.rooms: ", this.rooms);
+
   responseCb("okay"); 
 }
 

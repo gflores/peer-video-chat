@@ -9,6 +9,7 @@ import PlayLayout from './layouts/PlayLayout';
 import PlayClient from './pages/rooms/PlayClient';
 import PlayAdmin from './pages/rooms/PlayAdmin';
 
+import WebsocketMonitor from './pages/websocket-monitor/WebsocketMonitor.vue';
 
 import Dashboard from './pages/dashboard/Dashboard.vue';
 
@@ -22,5 +23,7 @@ export default new Router({
     {path: "/dashboard", component: PlayLayout, props: {page: Dashboard}},
     {path: "/play/:socketRoomId/client", component: PlayLayout, props: {page: PlayClient}},
     {path: "/play/:socketRoomId/admin", component: PlayLayout, props: {page: PlayAdmin}},
+
+    {path: "/websocket-monitor", component: WebsocketMonitor}
   ]
 })

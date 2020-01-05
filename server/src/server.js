@@ -52,6 +52,19 @@ let io = require('socket.io')(server);
 export default app;
 
 export const playRoomSocket = io.of("/play");
+export const monitorSocket = io.of("/ws-monitor");
+
+setInterval(() => {
+    monitorSocket.emit("snapshot", {
+        play: {
+            rooms: playRoomSocket.rooms
+        },
+        rooms1: io.sockets.adapter.rooms,
+        rooms2: io.sockets.rooms,
+        clients: io.sockets.clients,
+        sids: io.sockets.adapter.sids
+    });
+}, 5000);
 
 glob.sync(`${__dirname}/api/**/*.js`).forEach(file => {
     require(path.resolve(file));
