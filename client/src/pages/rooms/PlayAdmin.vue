@@ -45,6 +45,7 @@ import SimplePeer from "simple-peer";
 import adapter from 'webrtc-adapter';
 
 let peer;
+let peerSeed = null;
 
 let StunTurnList = {iceServers: [
   {   urls: [ "stun:ss-turn1.xirsys.com" ]},
@@ -109,6 +110,7 @@ export default {
     async simplePeerSetup() {
       let stream;
 
+      peerSeed = Math.round(Math.random() * 1000000);
       mySignals = [];
       this.isConnectionEstablished = false;
       try {
@@ -128,7 +130,7 @@ export default {
         mySignals.push(signal);
 
         if (this.socketConnectedToConvo == true) {
-          await playRoomEmit("transmit-signal", {signal: signal});
+          await playRoomEmit("transmit-signal", {signal: signal, seed: peerSeed});
         }
       });
     },
@@ -138,7 +140,7 @@ export default {
       }
       for (let i = 0; i < mySignals.length; ++i) {
         let sig = mySignals[i];
-        playRoomEmit("transmit-signal", {signal: sig});
+        playRoomEmit("transmit-signal", {signal: sig, seed: peerSeed});
       }
     },
     socketSetup(){
@@ -159,8 +161,15 @@ export default {
         console.log("OTHER SIGNAL: ", signal);
 
         if (this.isConnectionEstablished == true) {
+          //comment this allow toggle camera/mic
           console.log("connection already established, reconstructing peer");
           await this.simplePeerSetup();
+
+          //thePeer.addStream(oldNs)
+          //ns = await navigator.mediaDevices.getUserMedia({ video: false, audio: true })
+          //thePeer.removeStream(ns)
+
+          peer.signal(signal);
         } else {
           this.incomingSignal = signal;
           this.tryConnectIncomingSignal();

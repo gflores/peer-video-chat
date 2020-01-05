@@ -31,6 +31,7 @@ var StunTurnList = {iceServers: [
   {   urls: 'turn:104.248.158.23:3478', credential: 'gsFu3kkpFB2aMWih', username: 'Silverchat'}
   // {   username: "uE3FkTOJyBFzrPPzJUw0JniM6KKwnIFtAinZ-CylKuSe__JnRsK_dgCNGl_5uRWKAAAAAF39EHVnZmxvcmVz",   credential: "1f2c1b94-2355-11ea-bc46-7a7a3a22eac8",   urls: [       "turn:ss-turn1.xirsys.com:80?transport=udp",       "turn:ss-turn1.xirsys.com:3478?transport=udp",       "turn:ss-turn1.xirsys.com:80?transport=tcp",       "turn:ss-turn1.xirsys.com:3478?transport=tcp",       "turns:ss-turn1.xirsys.com:443?transport=tcp",       "turns:ss-turn1.xirsys.com:5349?transport=tcp"   ]}
 ]};
+let connectTimer = null;
 
 
 export default {
@@ -39,11 +40,12 @@ export default {
       isDataReady: false,
       newRoomName: "",
       room: null,
-      incomingSignals: [],
+      incomingSignals: {},
       socketConnectedToConvo: false,
       isConnectionEstablished: false,
-      newIncomingSignals: [],
-      hasAcceptedCall: false
+      hasAcceptedCall: false,
+      lastAdminSeed: null,
+      connectedSeed: null
     };
   },
   async created() {
@@ -88,27 +90,30 @@ export default {
       peer.on('signal', signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
 
-        this.isConnectionEstablished = true;
-
         playRoomEmit("transmit-signal", {signal: signal});
       });
 
-      if (this.socketConnectedToConvo == true && this.incomingSignals.length == 0) {
+      if (this.socketConnectedToConvo && (this.lastAdminSeed == null || this.incomingSignals[this.lastAdminSeed].length == 0)) {
         playRoomEmit("client/request-for-signal", {});
       }
     },
     socketSetup(){
-      playRoomOn("client/emit-signal", ({signal}) => {
-        console.log("OTHER SIGNAL: ", signal);
-        this.newIncomingSignals.push(signal);
-
-        setTimeout(async () => {
-          if (this.newIncomingSignals.length != 0) {
-            this.incomingSignals = this.newIncomingSignals;
-            this.newIncomingSignals = [];
+      playRoomOn("client/emit-signal", ({signal, seed}) => {
+        console.log(`OTHER SIGNAL [${seed}]: `, signal);
+        this.lastAdminSeed = seed;
+        if (this.connectedSeed == seed) {
+          peer.signal(signal);
+        } else if (this.incomingSignals[seed] == null) {
+          this.incomingSignals[seed] = [signal];
+          
+          clearTimeout(connectTimer);
+          connectTimer = setTimeout(async () => {
             await this.tryConnectIncomingSignal();
-          }
-        }, 2000);
+          }, 2000);
+        } else {
+          this.incomingSignals[seed].push(signal);
+        }
+
       });
     },
     async socketConnectToConvo() {
@@ -120,23 +125,25 @@ export default {
 
       return Promise.resolve();
     },
+    async answerCall(){
+      this.hasAcceptedCall = true;
+      this.tryConnectIncomingSignal();
+    },
     async tryConnectIncomingSignal() {
-      if (this.hasAcceptedCall == true && this.incomingSignals.length > 0) {
+      if (this.hasAcceptedCall == true && this.lastAdminSeed != null && this.incomingSignals[this.lastAdminSeed].length > 0) {
         if (this.isConnectionEstablished == true) {
           console.log("connection already established, reconstructing peer"); 
           await this.simplePeerSetup();
         }
-        console.log("Accepting: " + this.incomingSignals.length);
-        for (let i = 0; i < this.incomingSignals.length; ++i) {
-          let sig = this.incomingSignals[i];
+        console.log("Accepting: " + this.incomingSignals[this.lastAdminSeed].length);
+        for (let i = 0; i < this.incomingSignals[this.lastAdminSeed].length; ++i) {
+          let sig = this.incomingSignals[this.lastAdminSeed][i];
           peer.signal(sig);
         }
-        this.incomingSignals = [];
+        this.isConnectionEstablished = true;
+        this.incomingSignals[this.lastAdminSeed] = null;
+        this.connectedSeed = this.lastAdminSeed;
       }
-    },
-    async answerCall(){
-      this.hasAcceptedCall = true;
-      this.tryConnectIncomingSignal();
     },
     async joinRoom() {
       this.hasAcceptedCall = true;
