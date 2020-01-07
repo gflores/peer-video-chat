@@ -25,6 +25,7 @@ import store from "store";
 import SimplePeer from "simple-peer";
 
 let peer;
+let peerSeed = null;
 
 var StunTurnList = {iceServers: [
   {   urls: [ "stun:ss-turn1.xirsys.com" ]},
@@ -70,6 +71,8 @@ export default {
     async simplePeerSetup() {
       this.isConnectionEstablished = false;
 
+      peerSeed = Math.round(Math.random() * 1000000);
+
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList});
       peer.on('stream', stream => {
         console.log("receiving the vid");
@@ -90,7 +93,7 @@ export default {
       peer.on('signal', signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
 
-        playRoomEmit("transmit-signal", {signal: signal});
+        playRoomEmit("transmit-signal", {signal: signal, seed: peerSeed});
       });
 
       if (this.socketConnectedToConvo && (this.lastAdminSeed == null || this.incomingSignals[this.lastAdminSeed].length == 0)) {

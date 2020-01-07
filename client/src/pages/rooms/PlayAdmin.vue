@@ -19,20 +19,26 @@
         p Not having any conversation
         div(v-if="waitingConvos.length > 0")
           p Someone is Waiting !
-          button(@click="nextConvo()") Join Conversation
+          button(@click="recordVideo = false; nextConvo()") Join With CALL
+          button(@click="recordVideo = true; nextConvo()") Join With VIDEO
       div(v-else)
         p You are having conversation with: {{store.connectedConvo.clientId}}
         button(@click="endConvo()") End Conversation
 
         div(v-if="hasAcceptedCall == false")
-          button(@click="answerCall()") RECONNECT TO CONVERSATION !
+          button(@click="recordVideo = false; answerCall()") Reconnect to CALL !
+          button(@click="recordVideo = true; answerCall()") Reconnect to VIDEO !
+        div(v-else)
+          p {{recordVideo ? "Your Camera is ON" : "Your Camera is OFF"}}
+          button(@click="recordVideo = !recordVideo; updateUserMediaStream()") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
+
 
         //- div(v-if="incomingSignal != null")
         //-   p Someone is calling !
         //-   button(@click="acceptCall()") (old) acceptCall
         
-        button(@click="recordVideo = !recordVideo") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
-        button(@click="recordSound = !recordSound") {{recordSound ? "Turn Microphone OFF" : "Turn Microphone ON"}}
+        //- button(@click="recordVideo = !recordVideo; updateUserMediaStream()") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
+        //- button(@click="recordSound = !recordSound; updateUserMediaStream()") {{recordSound ? "Turn Microphone OFF" : "Turn Microphone ON"}}
 
 
 
@@ -54,6 +60,7 @@ let StunTurnList = {iceServers: [
 ]};
 
 let mySignals = [];
+let currentStream = null;
 
 export default {
   data() {
@@ -63,12 +70,14 @@ export default {
       room: null,
       convos: [],
       incomingSignal: null,
-      recordVideo: true,
+      recordVideo: false,
       recordSound: true,
       socketConnectedToRoom: false,
       socketConnectedToConvo: false,
       isConnectionEstablished: false,
-      hasAcceptedCall: false
+      hasAcceptedCall: false,
+      lastClientSeed: null,
+      connectedSeed: null
     };
   },
   async created() {
@@ -80,7 +89,7 @@ export default {
     await Promise.all([this.socketConnectToRoom(), this.socketConnectToConvo()]);
 
     this.isDataReady = true;
-    await this.simplePeerSetup();
+    // await this.simplePeerSetup();
   },
   methods: {
     async fetchAllData() {
@@ -111,18 +120,24 @@ export default {
       let stream;
 
       peerSeed = Math.round(Math.random() * 1000000);
+      this.lastClientSeed = null;
+      this.connectedSeed = null;
+
       mySignals = [];
       this.isConnectionEstablished = false;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound });
       } catch (e) {
         console.log("e: ", e);
         stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
       }
 
       peer = new SimplePeer({ initiator: true, trickle: true, stream: stream, config: StunTurnList});
+
       window.thePeer = peer;
       window.theStream = stream;
+
+      currentStream = stream;
 
       peer.on('error', err => console.log('peer error: ', err))
       peer.on('signal', async signal => {
@@ -133,6 +148,24 @@ export default {
           await playRoomEmit("transmit-signal", {signal: signal, seed: peerSeed});
         }
       });
+    },
+    async updateUserMediaStream(){
+      try {
+        peer.removeStream(currentStream);
+      } catch(e) {
+        currentStream = null;
+      } finally {
+        setTimeout(async () => {
+          currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound })
+          console.log("new stream: ", currentStream);
+          try {
+            peer.addStream(currentStream);
+          } catch(e) {
+            await this.simplePeerSetup();
+            console.log("RESETING LAST RESORT: ")
+          }
+        }, 500);
+      }
     },
     emitStoredSignals() {
       if (mySignals.length == 0) {
@@ -157,20 +190,30 @@ export default {
       });
 
       // When receiving signal from the client
-      playRoomOn("admin/emit-signal", async ({signal}) => {
+      playRoomOn("admin/emit-signal", async ({signal, seed}) => {
         console.log("OTHER SIGNAL: ", signal);
+        console.log("seed: ", seed);
+        console.log("this.connectedSeed: ", this.connectedSeed);
+        this.lastClientSeed = seed;
 
-        if (this.isConnectionEstablished == true) {
+        if (this.connectedSeed == seed) {
+          console.log("CONCAT NEW SIGNAL");
+          peer.signal(signal);
+        } else if (this.isConnectionEstablished == true) {
           //comment this allow toggle camera/mic
           console.log("connection already established, reconstructing peer");
           await this.simplePeerSetup();
 
-          //thePeer.addStream(oldNs)
+          //thePeer.removeStream(oldNs)
           //ns = await navigator.mediaDevices.getUserMedia({ video: false, audio: true })
-          //thePeer.removeStream(ns)
+          //thePeer.addStream(ns)
 
-          peer.signal(signal);
+          this.incomingSignal = signal;
+          this.tryConnectIncomingSignal();
+
+          // peer.signal(signal);
         } else {
+          console.log("INITIAL NEW SIGNAL");
           this.incomingSignal = signal;
           this.tryConnectIncomingSignal();
         }
@@ -186,6 +229,7 @@ export default {
         peer.signal(this.incomingSignal);
         this.isConnectionEstablished = true;
         this.incomingSignal = null;
+        this.connectedSeed = this.lastClientSeed;
       }
     },
     async joinRoom() {
@@ -200,6 +244,7 @@ export default {
       await this.fetchAllData();
     },
     async nextConvo() {
+      await this.simplePeerSetup();
       await apiRequest("admin/next-convo", {});
       await this.fetchAllData();
       this.hasAcceptedCall = true;
@@ -211,6 +256,7 @@ export default {
       await this.fetchAllData();
     },
     async answerCall(){
+      await this.simplePeerSetup();
       this.hasAcceptedCall = true;
       this.tryConnectIncomingSignal();
     }
