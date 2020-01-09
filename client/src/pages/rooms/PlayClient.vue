@@ -94,7 +94,7 @@ export default {
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
-        playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId()});
+        playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId(), returnSeed: this.lastAdminSeed});
       });
       peer.on('connect', () => {
         console.log("I'M CONNECTED !");
@@ -103,7 +103,7 @@ export default {
         console.log("CONNECTION WAS CLOSED ??");
       })
 
-      if (this.socketConnectedToConvo && (this.lastAdminSeed == null || this.incomingSignals[this.lastAdminSeed].length == 0)) {
+      if (this.socketConnectedToConvo && (this.lastAdminSeed == null || this.incomingSignals[this.lastAdminSeed] != null)) {
         playRoomEmit("client/request-for-signal", {});
       }
     },
@@ -112,15 +112,17 @@ export default {
         console.log(`OTHER SIGNAL [${seed}]: `, signal);
         this.lastAdminSeed = seed;
         if (this.connectedSeed == seed) {
+          console.log("CONCAT NEW SIGNAL");
           peer.signal(signal);
         } else if (this.incomingSignals[seed] == null) {
+          console.log("SIGNAL NEW SEED: ", seed);
           this.incomingSignals[seed] = [signal];
-          
           clearTimeout(connectTimer);
           connectTimer = setTimeout(async () => {
             await this.tryConnectIncomingSignal();
           }, 2000);
         } else {
+          console.log("PUSHING SIGNAL");
           this.incomingSignals[seed].push(signal);
         }
 
@@ -140,7 +142,7 @@ export default {
       this.tryConnectIncomingSignal();
     },
     async tryConnectIncomingSignal() {
-      if (this.hasAcceptedCall == true && this.lastAdminSeed != null && this.incomingSignals[this.lastAdminSeed].length > 0) {
+      if (this.hasAcceptedCall == true && this.lastAdminSeed != null && this.incomingSignals[this.lastAdminSeed] != null) {
         if (this.isConnectionEstablished == true) {
           console.log("connection already established, reconstructing peer"); 
           await this.simplePeerSetup();

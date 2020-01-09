@@ -189,7 +189,7 @@ async function onSetupConvos({}, authToken, responseCb) {
   responseCb("okay");
 }
 
-async function onTransmitSignal({signal, seed}, authToken, responseCb) {
+async function onTransmitSignal({signal, seed, returnSeed}, authToken, responseCb) {
   console.log("onTransmitSignal| authToken: ", authToken);
   let user = await Users.findOne({authToken});
 
@@ -199,7 +199,7 @@ async function onTransmitSignal({signal, seed}, authToken, responseCb) {
     return ;
   }
   let recipientRole = user.convoRole == "admin" ? "client" : "admin";
-  this.to("convo#" + user.currentConvoId).emit(recipientRole + "/emit-signal", {signal, seed});
+  this.to("convo#" + user.currentConvoId).emit(recipientRole + "/emit-signal", {signal, seed, returnSeed});
   responseCb("okay");
 }
 

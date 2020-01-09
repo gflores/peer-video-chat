@@ -206,7 +206,12 @@ export default {
       });
 
       // When receiving signal from the client
-      playRoomOn("admin/emit-signal", async ({signal, seed}) => {
+      playRoomOn("admin/emit-signal", async ({signal, seed, returnSeed}) => {
+        console.log("returnSeed: ", returnSeed)
+        if (returnSeed != getSocketId()) {
+          console.log("Unknown return Seed");
+          return ;
+        }
         console.log("OTHER SIGNAL: ", signal);
         console.log("seed: ", seed);
         console.log("this.connectedSeed: ", this.connectedSeed);
@@ -229,7 +234,7 @@ export default {
 
           // peer.signal(signal);
         } else {
-          console.log("INITIAL NEW SIGNAL");
+          console.log("FIRST SIGNAL");
           this.incomingSignal = signal;
           this.tryConnectIncomingSignal();
         }
