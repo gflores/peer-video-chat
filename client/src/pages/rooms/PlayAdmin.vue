@@ -22,6 +22,7 @@
           button(@click="recordVideo = false; nextConvo()") Join With CALL
           button(@click="recordVideo = true; nextConvo()") Join With VIDEO
       div(v-else)
+        video(muted="muted" playsinline="playsinline")
         p You are having conversation with: {{store.connectedConvo.clientId}}
         button(@click="endConvo()") End Conversation
 
@@ -117,8 +118,6 @@ export default {
       return Promise.resolve();
     },
     async simplePeerSetup() {
-      let stream;
-
       peerSeed = Math.round(Math.random() * 1000000);
       this.lastClientSeed = null;
       this.connectedSeed = null;
@@ -126,18 +125,28 @@ export default {
       mySignals = [];
       this.isConnectionEstablished = false;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound });
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound });
       } catch (e) {
         console.log("e: ", e);
-        stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
       }
 
-      peer = new SimplePeer({ initiator: true, trickle: true, stream: stream, config: StunTurnList});
+      peer = new SimplePeer({ initiator: true, trickle: true, stream: currentStream, config: StunTurnList});
 
-      window.thePeer = peer;
-      window.theStream = stream;
+      peer.on('stream', stream => {
+        console.log("receiving the vid");
+        var video = document.querySelector('video')    
+        if ('srcObject' in video) {
+          video.srcObject = stream
+        } else {
+          video.src = window.URL.createObjectURL(stream) // for older browsers
+        }
+        video.play();
+        video.muted = false
+      });
 
-      currentStream = stream;
+      // window.thePeer = peer;
+      // window.theStream = stream;
 
       peer.on('error', err => console.log('peer error: ', err))
       peer.on('signal', async signal => {

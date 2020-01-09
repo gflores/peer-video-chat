@@ -34,6 +34,7 @@ var StunTurnList = {iceServers: [
 ]};
 let connectTimer = null;
 
+let currentStream;
 
 export default {
   data() {
@@ -72,8 +73,10 @@ export default {
       this.isConnectionEstablished = false;
 
       peerSeed = Math.round(Math.random() * 1000000);
+      
+      currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
 
-      peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList});
+      peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, stream: currentStream});
       peer.on('stream', stream => {
         console.log("receiving the vid");
         // got remote video stream, now let's show it in a video tag
