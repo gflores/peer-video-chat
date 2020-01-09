@@ -4,9 +4,11 @@ import store from "store";
 let host = `https://${location.host.split(":")[0]}:4000/`;
 let playRoomSocket = require('socket.io-client')(host + "play", {rejectUnauthorized: false});
 
+function getSocketId() {
+  return playRoomSocket.id;
+}
+
 async function apiRequest(path, data) {
-
-
   try {
     let res = await axios.post(host + path, data, {
       headers: {
@@ -47,5 +49,6 @@ function playRoomOn(handleName, callback) {
 export {
   apiRequest,
   playRoomEmit,
-  playRoomOn
+  playRoomOn,
+  getSocketId
 }

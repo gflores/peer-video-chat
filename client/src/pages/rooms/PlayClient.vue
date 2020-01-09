@@ -20,12 +20,11 @@
 </template>
 
 <script>
-import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
+import { apiRequest, playRoomEmit, playRoomOn, getSocketId } from '~/src/lib/api.js';
 import store from "store";
 import SimplePeer from "simple-peer";
 
 let peer;
-let peerSeed = null;
 
 var StunTurnList = {iceServers: [
   {   urls: [ "stun:ss-turn1.xirsys.com" ]},
@@ -70,10 +69,10 @@ export default {
 
     },
     async simplePeerSetup() {
+      console.log(getSocketId());
+
       this.isConnectionEstablished = false;
 
-      peerSeed = Math.round(Math.random() * 1000000);
-      
       currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
 
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, stream: currentStream});
@@ -95,9 +94,14 @@ export default {
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
-
-        playRoomEmit("transmit-signal", {signal: signal, seed: peerSeed});
+        playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId()});
       });
+      peer.on('connect', () => {
+        console.log("I'M CONNECTED !");
+      })
+      peer.on('close', () => {
+        console.log("CONNECTION WAS CLOSED ??");
+      })
 
       if (this.socketConnectedToConvo && (this.lastAdminSeed == null || this.incomingSignals[this.lastAdminSeed].length == 0)) {
         playRoomEmit("client/request-for-signal", {});

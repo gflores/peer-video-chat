@@ -46,13 +46,12 @@
 </template>
 
 <script>
-import { apiRequest, playRoomEmit, playRoomOn } from '~/src/lib/api.js';
+import { apiRequest, playRoomEmit, playRoomOn, getSocketId } from '~/src/lib/api.js';
 import store from "store";
 import SimplePeer from "simple-peer";
 import adapter from 'webrtc-adapter';
 
 let peer;
-let peerSeed = null;
 
 let StunTurnList = {iceServers: [
   {   urls: [ "stun:ss-turn1.xirsys.com" ]},
@@ -118,7 +117,8 @@ export default {
       return Promise.resolve();
     },
     async simplePeerSetup() {
-      peerSeed = Math.round(Math.random() * 1000000);
+      console.log(getSocketId());
+
       this.lastClientSeed = null;
       this.connectedSeed = null;
 
@@ -154,9 +154,16 @@ export default {
         mySignals.push(signal);
 
         if (this.socketConnectedToConvo == true) {
-          await playRoomEmit("transmit-signal", {signal: signal, seed: peerSeed});
+          await playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId()});
         }
       });
+
+      peer.on('connect', () => {
+        console.log("I'M CONNECTED !");
+      })
+      peer.on('close', () => {
+        console.log("CONNECTION WAS CLOSED ??");
+      })
     },
     async updateUserMediaStream(){
       try {
@@ -173,7 +180,7 @@ export default {
             await this.simplePeerSetup();
             console.log("RESETING LAST RESORT: ")
           }
-        }, 500);
+        }, 10);
       }
     },
     emitStoredSignals() {
@@ -182,7 +189,7 @@ export default {
       }
       for (let i = 0; i < mySignals.length; ++i) {
         let sig = mySignals[i];
-        playRoomEmit("transmit-signal", {signal: sig, seed: peerSeed});
+        playRoomEmit("transmit-signal", {signal: sig, seed: getSocketId()});
       }
     },
     socketSetup(){
@@ -231,6 +238,9 @@ export default {
       playRoomOn("admin/notify-new-convo", ({convo}) => {
         console.log("NEW CONVO: ", convo);
         this.convos.push(convo);
+      });
+      playRoomOn("user-disconnected", ({id}) => {
+        console.log("THIS SOCKET ID DISCONNECTED: ", id);
       });
     },
     async tryConnectIncomingSignal() {

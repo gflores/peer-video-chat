@@ -2,7 +2,7 @@ import app, {playRoomSocket} from "~/src/server.js";
 import Rooms from "~/src/models/rooms.js";
 import Convos from "~/src/models/convos.js";
 import { authMiddleware } from "~/src/lib/middlewares";
-import Users from "../../models/users";
+import Users from "~/src/models/users";
 
 app.post("/get-current-convo", authMiddleware, async (req, res) => {
   let {} = req.body;
