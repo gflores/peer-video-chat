@@ -24,7 +24,7 @@ import { apiRequest, playRoomEmit, playRoomOn, getSocketId } from '~/src/lib/api
 import store from "store";
 import SimplePeer from "simple-peer";
 
-let peer;
+let peer = null;
 
 var StunTurnList = {iceServers: [
   {   urls: [ "stun:ss-turn1.xirsys.com" ]},
@@ -57,7 +57,10 @@ export default {
     await this.socketConnectToConvo();
 
     this.isDataReady = true;
-    await this.simplePeerSetup();
+    // await this.simplePeerSetup();
+    // if (this.socketConnectedToConvo == true) {
+    //   playRoomEmit("client/request-for-signal", {});
+    // }
   },
   methods: {
     async fetchAllData() {
@@ -69,9 +72,13 @@ export default {
 
     },
     async simplePeerSetup() {
-      console.log(getSocketId());
+      console.log("My Seed: ", getSocketId());
 
       this.isConnectionEstablished = false;
+
+      if (peer != null) {
+        peer.destroy();
+      }
 
       currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
 
@@ -94,7 +101,7 @@ export default {
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
-        playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId(), returnSeed: this.lastAdminSeed});
+        playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId(), returnSeed: this.connectedSeed});
       });
       peer.on('connect', () => {
         console.log("I'M CONNECTED !");
@@ -103,9 +110,6 @@ export default {
         console.log("CONNECTION WAS CLOSED ??");
       })
 
-      if (this.socketConnectedToConvo && (this.lastAdminSeed == null || this.incomingSignals[this.lastAdminSeed] != null)) {
-        playRoomEmit("client/request-for-signal", {});
-      }
     },
     socketSetup(){
       playRoomOn("client/emit-signal", ({signal, seed}) => {
@@ -138,8 +142,14 @@ export default {
       return Promise.resolve();
     },
     async answerCall(){
+      this.simplePeerSetup();
       this.hasAcceptedCall = true;
-      this.tryConnectIncomingSignal();
+
+      if (this.lastAdminSeed == null) {
+        playRoomEmit("client/request-for-signal", {})
+      } else {
+        this.tryConnectIncomingSignal();
+      }
     },
     async tryConnectIncomingSignal() {
       if (this.hasAcceptedCall == true && this.lastAdminSeed != null && this.incomingSignals[this.lastAdminSeed] != null) {
@@ -148,23 +158,28 @@ export default {
           await this.simplePeerSetup();
         }
         console.log("Accepting: " + this.incomingSignals[this.lastAdminSeed].length);
+        this.connectedSeed = this.lastAdminSeed;
         for (let i = 0; i < this.incomingSignals[this.lastAdminSeed].length; ++i) {
           let sig = this.incomingSignals[this.lastAdminSeed][i];
           peer.signal(sig);
         }
         this.isConnectionEstablished = true;
         this.incomingSignals[this.lastAdminSeed] = null;
-        this.connectedSeed = this.lastAdminSeed;
       }
     },
     async joinRoom() {
+      this.simplePeerSetup();
+      
       this.hasAcceptedCall = true;
       await apiRequest("client/join-convo", {
         socketRoomId: this.socketRoomId
         });
       await this.fetchAllData();
       await this.socketConnectToConvo();
-      playRoomEmit("client/request-for-signal", {})
+
+      if (this.lastAdminSeed == null) {
+        playRoomEmit("client/request-for-signal", {})
+      }
     },
     async leaveRoom() {
       await apiRequest("client/leave-convo", {});

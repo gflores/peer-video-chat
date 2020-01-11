@@ -51,7 +51,7 @@ import store from "store";
 import SimplePeer from "simple-peer";
 import adapter from 'webrtc-adapter';
 
-let peer;
+let peer = null;
 
 let StunTurnList = {iceServers: [
   {   urls: [ "stun:ss-turn1.xirsys.com" ]},
@@ -117,13 +117,18 @@ export default {
       return Promise.resolve();
     },
     async simplePeerSetup() {
-      console.log(getSocketId());
+      console.log("My Seed: ", getSocketId());
 
       this.lastClientSeed = null;
       this.connectedSeed = null;
 
       mySignals = [];
       this.isConnectionEstablished = false;
+
+      if (peer != null) {
+        peer.destroy();
+      }
+
       try {
         currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound });
       } catch (e) {
@@ -157,7 +162,6 @@ export default {
           await playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId()});
         }
       });
-
       peer.on('connect', () => {
         console.log("I'M CONNECTED !");
       })
@@ -184,6 +188,7 @@ export default {
       }
     },
     emitStoredSignals() {
+      console.log("emit my stored signals: ", mySignals.length);
       if (mySignals.length == 0) {
         return ;
       }
@@ -201,6 +206,7 @@ export default {
           console.log("connection already established, reconstructing peer");
           await this.simplePeerSetup();
         } else {
+
           this.emitStoredSignals();
         }
       });
