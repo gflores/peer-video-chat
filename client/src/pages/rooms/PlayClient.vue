@@ -11,6 +11,9 @@
 
       div(v-if="hasAcceptedCall == false")
         button(@click="answerCall()") RECONNECT TO CONVERSATION !
+      div(v-else)
+        p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
+        button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Mic OFF" : "Turn Mic ON"}}
 
 
       //- div(v-if="incomingSignals.length > 0")
@@ -42,6 +45,7 @@ export default {
       newRoomName: "",
       room: null,
       incomingSignals: {},
+      recordAudio: true,
       socketConnectedToConvo: false,
       isConnectionEstablished: false,
       hasAcceptedCall: false,
@@ -84,7 +88,11 @@ export default {
       }
 
       try {
-        currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        if (this.recordAudio == true) {
+          currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        } else {
+          currentStream = undefined;
+        }
       } catch (e) {
         console.log("e: ", e);
         currentStream = undefined;
@@ -115,7 +123,7 @@ export default {
         console.log("I'M CONNECTED !");
       })
       peer.on('close', () => {
-        console.log("CONNECTION WAS CLOSED ??");
+        console.log("CONNECTION WAS CLOSED !!");
       })
     },
 
@@ -142,6 +150,31 @@ export default {
 
       });
     },
+
+    async updateUserMediaStream(){
+      try {
+        if (currentStream != null) {
+          peer.removeStream(currentStream);
+          currentStream = null;
+        }
+      } catch(e) {
+        currentStream = null;
+      } finally {
+        if (this.recordAudio == true) {
+          setTimeout(async () => {
+            currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            console.log("new stream: ", currentStream);
+            try {
+              peer.addStream(currentStream);
+            } catch(e) {
+              // await this.simplePeerSetup();
+              console.log("SHOULD BE LAST RESORT, BUT WAIT FOR ADMIN TO RESTART")
+            }
+          }, 10);
+        }
+      }
+    },
+
     async socketConnectToConvo() {
       console.log(`try connect to convo: ${this.store.connectedConvo != null} && ${this.socketConnectedToConvo == false}`);
       if (this.store.connectedConvo != null && this.socketConnectedToConvo == false) {
@@ -152,7 +185,7 @@ export default {
       return Promise.resolve();
     },
     async answerCall(){
-      this.simplePeerSetup();
+      await this.simplePeerSetup();
       this.hasAcceptedCall = true;
 
       if (this.lastAdminSeed == null) {
@@ -178,7 +211,7 @@ export default {
       }
     },
     async joinRoom() {
-      this.simplePeerSetup();
+      await this.simplePeerSetup();
       this.hasAcceptedCall = true;
 
       await apiRequest("client/join-convo", {

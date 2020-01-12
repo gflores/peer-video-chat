@@ -39,7 +39,7 @@
         //-   button(@click="acceptCall()") (old) acceptCall
         
         //- button(@click="recordVideo = !recordVideo; updateUserMediaStream()") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
-        //- button(@click="recordSound = !recordSound; updateUserMediaStream()") {{recordSound ? "Turn Microphone OFF" : "Turn Microphone ON"}}
+        //- button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Microphone OFF" : "Turn Microphone ON"}}
 
 
 
@@ -50,6 +50,7 @@ import { apiRequest, playRoomEmit, playRoomOn, getSocketId } from '~/src/lib/api
 import store from "store";
 import SimplePeer from "simple-peer";
 import adapter from 'webrtc-adapter';
+import moment from 'moment';
 
 let peer = null;
 
@@ -59,7 +60,6 @@ let StunTurnList = {iceServers: [
   // {   username: "uE3FkTOJyBFzrPPzJUw0JniM6KKwnIFtAinZ-CylKuSe__JnRsK_dgCNGl_5uRWKAAAAAF39EHVnZmxvcmVz",   credential: "1f2c1b94-2355-11ea-bc46-7a7a3a22eac8",   urls: [       "turn:ss-turn1.xirsys.com:80?transport=udp",       "turn:ss-turn1.xirsys.com:3478?transport=udp",       "turn:ss-turn1.xirsys.com:80?transport=tcp",       "turn:ss-turn1.xirsys.com:3478?transport=tcp",       "turns:ss-turn1.xirsys.com:443?transport=tcp",       "turns:ss-turn1.xirsys.com:5349?transport=tcp"   ]}
 ]};
 
-let mySignals = [];
 let currentStream = null;
 
 export default {
@@ -71,7 +71,7 @@ export default {
       convos: [],
       incomingSignal: null,
       recordVideo: false,
-      recordSound: true,
+      recordAudio: true,
       socketConnectedToRoom: false,
       socketConnectedToConvo: false,
       isConnectionEstablished: false,
@@ -79,7 +79,9 @@ export default {
       lastClientSeed: null,
       connectedSeed: null,
       mySeed: null,
-      clientSocketId: null
+      clientSocketId: null,
+      mySignals: [],
+      lastPeerSetupDate: null
     };
   },
   async created() {
@@ -119,13 +121,19 @@ export default {
       return Promise.resolve();
     },
     async simplePeerSetup() {
+      if (this.lastPeerSetupDate == null || moment() - this.lastPeerSetupDate > 2000) {
+        this.lastPeerSetupDate = moment();
+      } else {
+        return ;
+      }
+
       this.mySeed = Math.round(Math.random() * 1000000);
       console.log("My Seed: ", this.mySeed);
 
       this.lastClientSeed = null;
       this.connectedSeed = null;
 
-      mySignals = [];
+      this.mySignals = [];
       this.isConnectionEstablished = false;
 
       if (peer != null) {
@@ -133,7 +141,7 @@ export default {
       }
 
       try {
-        currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound });
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordAudio });
       } catch (e) {
         console.log("e: ", e);
         currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
@@ -159,7 +167,7 @@ export default {
       peer.on('error', err => console.log('peer error: ', err))
       peer.on('signal', async signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
-        mySignals.push(signal);
+        this.mySignals.push(signal);
 
         if (this.socketConnectedToConvo == true) {
           await playRoomEmit("transmit-signal", {signal: signal, seed: this.mySeed, senderSocketId: getSocketId()});
@@ -168,8 +176,9 @@ export default {
       peer.on('connect', () => {
         console.log("I'M CONNECTED !");
       })
-      peer.on('close', () => {
-        console.log("CONNECTION WAS CLOSED ??");
+      peer.on('close', async () => {
+        console.log("CONNECTION WAS CLOSED !!");
+        await this.simplePeerSetup();
       })
     },
     async updateUserMediaStream(){
@@ -179,7 +188,7 @@ export default {
         currentStream = null;
       } finally {
         setTimeout(async () => {
-          currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordSound })
+          currentStream = await navigator.mediaDevices.getUserMedia({ video: this.recordVideo, audio: this.recordAudio })
           console.log("new stream: ", currentStream);
           try {
             peer.addStream(currentStream);
@@ -191,16 +200,16 @@ export default {
       }
     },
     emitStoredSignals() {
-      console.log("emit my stored signals: ", mySignals.length);
-      if (mySignals.length == 0) {
+      console.log("emit my stored signals: ", this.mySignals.length);
+      if (this.mySignals.length == 0) {
         return ;
       }
-      for (let i = 0; i < mySignals.length; ++i) {
-        let sig = mySignals[i];
+      for (let i = 0; i < this.mySignals.length; ++i) {
+        let sig = this.mySignals[i];
         playRoomEmit("transmit-signal", {signal: sig, seed: this.mySeed, senderSocketId: getSocketId()});
       }
     },
-    socketSetup(){
+    socketSetup() {
       // When receiving request to send signals again from client
       playRoomOn("admin/request-for-signal", async ({}) => {
         console.log("receiving request-for-signal");
@@ -239,8 +248,8 @@ export default {
           //ns = await navigator.mediaDevices.getUserMedia({ video: false, audio: true })
           //thePeer.addStream(ns)
 
-          this.incomingSignal = signal;
-          this.tryConnectIncomingSignal();
+          // this.incomingSignal = signal;
+          // this.tryConnectIncomingSignal();
 
           // peer.signal(signal);
         } else {
@@ -292,7 +301,7 @@ export default {
     async answerCall(){
       await this.simplePeerSetup();
       this.hasAcceptedCall = true;
-      this.tryConnectIncomingSignal();
+      // this.tryConnectIncomingSignal();
     }
   },
   computed: {
