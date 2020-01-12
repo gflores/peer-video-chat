@@ -77,7 +77,9 @@ export default {
       isConnectionEstablished: false,
       hasAcceptedCall: false,
       lastClientSeed: null,
-      connectedSeed: null
+      connectedSeed: null,
+      mySeed: null,
+      clientSocketId: null
     };
   },
   async created() {
@@ -117,7 +119,8 @@ export default {
       return Promise.resolve();
     },
     async simplePeerSetup() {
-      console.log("My Seed: ", getSocketId());
+      this.mySeed = Math.round(Math.random() * 1000000);
+      console.log("My Seed: ", this.mySeed);
 
       this.lastClientSeed = null;
       this.connectedSeed = null;
@@ -159,7 +162,7 @@ export default {
         mySignals.push(signal);
 
         if (this.socketConnectedToConvo == true) {
-          await playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId()});
+          await playRoomEmit("transmit-signal", {signal: signal, seed: this.mySeed, senderSocketId: getSocketId()});
         }
       });
       peer.on('connect', () => {
@@ -194,7 +197,7 @@ export default {
       }
       for (let i = 0; i < mySignals.length; ++i) {
         let sig = mySignals[i];
-        playRoomEmit("transmit-signal", {signal: sig, seed: getSocketId()});
+        playRoomEmit("transmit-signal", {signal: sig, seed: this.mySeed, senderSocketId: getSocketId()});
       }
     },
     socketSetup(){
@@ -212,9 +215,9 @@ export default {
       });
 
       // When receiving signal from the client
-      playRoomOn("admin/emit-signal", async ({signal, seed, returnSeed}) => {
+      playRoomOn("admin/emit-signal", async ({signal, seed, returnSeed, senderSocketId}) => {
         console.log("returnSeed: ", returnSeed)
-        if (returnSeed != getSocketId()) {
+        if (returnSeed != this.mySeed) {
           console.log("Unknown return Seed");
           return ;
         }
@@ -222,6 +225,7 @@ export default {
         console.log("seed: ", seed);
         console.log("this.connectedSeed: ", this.connectedSeed);
         this.lastClientSeed = seed;
+        this.clientSocketId = senderSocketId;
 
         if (this.connectedSeed == seed) {
           console.log("CONCAT NEW SIGNAL");

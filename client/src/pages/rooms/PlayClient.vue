@@ -46,7 +46,9 @@ export default {
       isConnectionEstablished: false,
       hasAcceptedCall: false,
       lastAdminSeed: null,
-      connectedSeed: null
+      connectedSeed: null,
+      mySeed: null,
+      adminSocketId: null
     };
   },
   async created() {
@@ -72,7 +74,8 @@ export default {
 
     },
     async simplePeerSetup() {
-      console.log("My Seed: ", getSocketId());
+      this.mySeed = Math.round(Math.random() * 1000000);
+      console.log("My Seed: ", this.mySeed);
 
       this.isConnectionEstablished = false;
 
@@ -80,7 +83,12 @@ export default {
         peer.destroy();
       }
 
-      currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      } catch (e) {
+        console.log("e: ", e);
+        currentStream = undefined;
+      }
 
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, stream: currentStream});
       peer.on('stream', stream => {
@@ -101,7 +109,7 @@ export default {
       peer.on('error', err => console.log('error', err))
       peer.on('signal', signal => {
         console.log('MY SIGNAL:  ', JSON.stringify(signal))
-        playRoomEmit("transmit-signal", {signal: signal, seed: getSocketId(), returnSeed: this.connectedSeed});
+        playRoomEmit("transmit-signal", {signal: signal, seed: this.mySeed, senderSocketId: getSocketId(), returnSeed: this.connectedSeed});
       });
       peer.on('connect', () => {
         console.log("I'M CONNECTED !");
@@ -109,12 +117,14 @@ export default {
       peer.on('close', () => {
         console.log("CONNECTION WAS CLOSED ??");
       })
-
     },
+
     socketSetup(){
-      playRoomOn("client/emit-signal", ({signal, seed}) => {
+      playRoomOn("client/emit-signal", ({signal, seed, senderSocketId}) => {
         console.log(`OTHER SIGNAL [${seed}]: `, signal);
         this.lastAdminSeed = seed;
+        this.adminSocketId = senderSocketId;
+
         if (this.connectedSeed == seed) {
           console.log("CONCAT NEW SIGNAL");
           peer.signal(signal);
@@ -169,8 +179,8 @@ export default {
     },
     async joinRoom() {
       this.simplePeerSetup();
-      
       this.hasAcceptedCall = true;
+
       await apiRequest("client/join-convo", {
         socketRoomId: this.socketRoomId
         });
