@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "vue-cli-service serve --port 443 --https",
+    "start": "vue-cli-service serve --port 3000",
     "build": "vue-cli-service build",
     "serve": "node server.js"
   },
