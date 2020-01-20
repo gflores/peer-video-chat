@@ -2,7 +2,7 @@ import axios from "axios";
 import store from "store";
 
 let fullDomain = location.host.split(":")[0].split(".");
-let rootDomain = fullDomain.slice(fullDomain.length - 2, fullDomain.length);
+let rootDomain = fullDomain.slice(fullDomain.length - 2, fullDomain.length).join(".");
 let host = `${location.protocol}//${rootDomain}:4000/`;
 let playRoomSocket = require('socket.io-client')(host + "play", {rejectUnauthorized: false});
 
