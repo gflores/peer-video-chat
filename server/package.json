@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon --exec babel-node src/server.js",
+    "start": "cross-env NO_SSL='false' nodemon --exec babel-node src/server.js",
     "build": "babel src --out-dir dist -s",
     "serve": "node dist/server.js"
   },
@@ -36,6 +36,7 @@
     "@babel/polyfill": "^7.4.3",
     "@babel/preset-env": "^7.4.2",
     "babel-plugin-root-import": "^6.1.0",
+    "cross-env": "^6.0.3",
     "nodemon": "^1.18.10"
   }
 }

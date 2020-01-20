@@ -22,18 +22,23 @@ app.get('/', (req, res) => {
 });
  
 const port = process.env.PORT || 4000;
-let server = app.listen(port, async () => {
-    console.log(`listening on ${port}`);
-});
+let server;
 
-// let serverOptions = {
-//     key: fs.readFileSync(path.resolve(__dirname, '../certs/private.key')),
-//     cert: fs.readFileSync(path.resolve(__dirname, '../certs/cert.crt'))
-// };
-// let server = https.createServer(serverOptions, app);
-// server.listen(port, async () => {
-//     console.log(`https listening on ${port}`);
-// });
+if (process.env.NO_SSL == "true") {
+    server = app.listen(port, async () => {
+        console.log(`HTTP listening on ${port}`);
+    });    
+} else {
+    let serverOptions = {
+        key: fs.readFileSync(path.resolve(__dirname, '../../../certs/star_silverchat_co.key')),
+        cert: fs.readFileSync(path.resolve(__dirname, '../../../certs/star_silverchat_co.crt'))
+    };
+    server = https.createServer(serverOptions, app);
+    server.listen(port, async () => {
+        console.log(`HTTPS listening on ${port}`);
+    });
+}
+
 
 let io = require('socket.io')(server);
 
