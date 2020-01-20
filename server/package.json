@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "cross-env NO_SSL='false' nodemon --exec babel-node src/server.js",
+    "start": "cross-env NO_SSL='true' nodemon --exec babel-node src/server.js",
     "build": "babel src --out-dir dist -s",
     "serve": "node dist/server.js"
   },
