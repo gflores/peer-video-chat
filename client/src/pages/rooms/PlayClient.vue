@@ -1,8 +1,8 @@
 <template lang="pug">
   section(v-if="isDataReady")
-    div Room is {{room.name}}
+    //- div Room is {{room.name}}
     div(v-if="store.connectedConvo == null")
-      p Not Connected to any room
+      //- p Not Connected to any room
       button(@click="joinRoom()") Join Room
     div(v-else)
       p You are connected to the room: {{store.connectedRoom.name}}

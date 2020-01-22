@@ -1,7 +1,7 @@
 import axios from "axios";
 import store from "store";
 
-let host = `https://${location.host.split(":")[0]}:4000/`;
+let host = location.protocol + `//${location.host.split(":")[0]}:4000/`;
 let playRoomSocket = require('socket.io-client')(host + "play", {rejectUnauthorized: false});
 
 function getSocketId() {
