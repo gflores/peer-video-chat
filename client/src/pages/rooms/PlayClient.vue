@@ -1,24 +1,21 @@
 <template lang="pug">
-  .play-client(v-if="isDataReady")
+  .play-client(:class="hasAcceptedCall ? 'accepted-call' : ''" v-if="isDataReady")
     //- div Room is {{room.name}}
     template(v-if="store.connectedConvo == null")
       //- p Not Connected to any room
       button.instant-call(@click="joinRoom()") Instant Call
     template(v-else)
-      p You are connected to the room: {{store.connectedRoom.name}}
+      div(v-if="connectedSeed == null") Calling...
+      //- p You are connected to the room: {{store.connectedRoom.name}}
       video(muted="muted" playsinline="playsinline")
-      button(@click="leaveRoom()") Leave Room
+      //- button(@click="leaveRoom()") Leave Room
 
       template(v-if="hasAcceptedCall == false")
-        button(@click="answerCall()") RECONNECT TO CONVERSATION !
+        button.reconnect-call(@click="answerCall()") Reconnect call
       template(v-else)
-        p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
-        button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Mic OFF" : "Turn Mic ON"}}
+        //- p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
+        //- button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Mic OFF" : "Turn Mic ON"}}
 
-
-      //- div(v-if="incomingSignals.length > 0")
-      //-   p Someone is calling !
-      //-   button(@click="answerCall()") Answer Call
 
 </template>
 
@@ -244,6 +241,9 @@ export default {
     position: absolute;
     width: 100%;
     height: 55px;
+    &.accepted-call {
+      height: 250px;
+    }
   }
 
   .instant-call {
@@ -253,6 +253,23 @@ export default {
     color: white;
     font-size: 24px;
     font-weight: 700;
+    background: hsla(120, 91%, 34%, 1);    
   }
 
+  .reconnect-call {
+    font-family: 'Source Sans Pro', sans-serif;
+    width: 100%;
+    height: 100%;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    background: hsla(120, 91%, 34%, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  video {
+    width: 100%;
+  }
 </style>
