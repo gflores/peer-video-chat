@@ -1,17 +1,17 @@
 <template lang="pug">
-  section(v-if="isDataReady")
+  .play-client(v-if="isDataReady")
     //- div Room is {{room.name}}
-    div(v-if="store.connectedConvo == null")
+    template(v-if="store.connectedConvo == null")
       //- p Not Connected to any room
-      button(@click="joinRoom()") Join Room
-    div(v-else)
+      button.instant-call(@click="joinRoom()") Instant Call
+    template(v-else)
       p You are connected to the room: {{store.connectedRoom.name}}
       video(muted="muted" playsinline="playsinline")
       button(@click="leaveRoom()") Leave Room
 
-      div(v-if="hasAcceptedCall == false")
+      template(v-if="hasAcceptedCall == false")
         button(@click="answerCall()") RECONNECT TO CONVERSATION !
-      div(v-else)
+      template(v-else)
         p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
         button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Mic OFF" : "Turn Mic ON"}}
 
@@ -239,5 +239,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .play-client {
+    background: hsla(120, 91%, 34%, 1);
+    position: absolute;
+    width: 100%;
+    height: 55px;
+  }
+
+  .instant-call {
+    font-family: 'Source Sans Pro', sans-serif;
+    width: 100%;
+    height: 100%;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+  }
 
 </style>

@@ -5,9 +5,9 @@
       button(@click="clickCreateNewRoom()") Create New
     .list
       .item(v-for="room in rooms")
-       router-link(:to="`play/${room.socketRoomId}/client`") {{room.name}}
+       router-link(:to="`play/${room.socketRoomId}/client/preview`") {{room.name}}
        | &#32;
-       router-link(:to="`play/${room.socketRoomId}/admin`") @#@
+       router-link(:to="`play/${room.socketRoomId}/admin`") _@
 
     
 </template>

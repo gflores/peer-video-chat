@@ -21,7 +21,8 @@ export default new Router({
   routes: [
     {path: "/", redirect: "/dashboard"},
     {path: "/dashboard", component: PlayLayout, props: {page: Dashboard}},
-    {path: "/play/:socketRoomId/client", component: PlayLayout, props: {page: PlayClient}},
+    {path: "/play/:socketRoomId/client", component: PlayClient},
+    {path: "/play/:socketRoomId/client/preview", component: PlayLayout, props: {page: PlayClient}},
     {path: "/play/:socketRoomId/admin", component: PlayLayout, props: {page: PlayAdmin}},
 
     {path: "/websocket-monitor", component: WebsocketMonitor}
