@@ -6,7 +6,7 @@
     body, html {
         margin: 0;
         padding: 0;
-        font-family: 'Titillium Web', sans-serif;
+        font-family: 'Source Sans Pro', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
