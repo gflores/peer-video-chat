@@ -253,7 +253,8 @@ export default {
     color: white;
     font-size: 24px;
     font-weight: 700;
-    background: hsla(120, 91%, 34%, 1);    
+    background: hsla(120, 91%, 34%, 1);
+    border: 0;
   }
 
   .reconnect-call {
@@ -267,6 +268,7 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
+    border: 0;
   }
 
   video {
