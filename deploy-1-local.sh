@@ -5,5 +5,5 @@ rm -rf dist
 npm run build
 git add dist/
 
-git commit -am "[Automated] Generating Production Files"
+git commit -am "[auto] Generating Production Files..."
 git push origin master
