@@ -1,20 +1,26 @@
 <template lang="pug">
-  .play-client(:class="hasAcceptedCall ? 'accepted-call' : ''" v-if="isDataReady")
-    //- div Room is {{room.name}}
-    template(v-if="store.connectedConvo == null")
-      //- p Not Connected to any room
-      button.instant-call(@click="joinRoom()") Instant Call
-    template(v-else)
-      div(v-if="connectedSeed == null") Calling...
-      //- p You are connected to the room: {{store.connectedRoom.name}}
-      video(muted="muted" playsinline="playsinline")
-      //- button(@click="leaveRoom()") Leave Room
-
-      template(v-if="hasAcceptedCall == false")
-        button.reconnect-call(@click="answerCall()") Reconnect call
+  .play-client(:class="hasAcceptedCall ? 'accepted-call' : ''")
+    template(v-if="isDataReady")
+      //- div Room is {{room.name}}
+      template(v-if="store.connectedConvo == null")
+        //- p Not Connected to any room
+        button.instant-call(@click="joinRoom()")
+          span.bolt-wrapper
+            Bolt.left
+          | Instant Call
+          span.bolt-wrapper
+            Bolt.right
       template(v-else)
-        //- p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
-        //- button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Mic OFF" : "Turn Mic ON"}}
+        .calling-msg(v-if="connectedSeed == null") Calling...
+        //- p You are connected to the room: {{store.connectedRoom.name}}
+        video(muted="muted" playsinline="playsinline")
+        //- button(@click="leaveRoom()") Leave Room
+
+        template(v-if="hasAcceptedCall == false")
+          button.reconnect-call(@click="answerCall()") Reconnect call
+        template(v-else)
+          //- p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
+          //- button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Mic OFF" : "Turn Mic ON"}}
 
 
 </template>
@@ -64,6 +70,8 @@ export default {
     // if (this.socketConnectedToConvo == true) {
     //   playRoomEmit("client/request-for-signal", {});
     // }
+  },
+  mounted() {
   },
   methods: {
     async fetchAllData() {
@@ -273,5 +281,32 @@ export default {
 
   video {
     width: 100%;
+  }
+
+  .bolt-wrapper {
+    position: relative;
+
+    svg {
+      height: 26px;
+      position: absolute;
+      fill: white;
+      top: 2px;
+      &.left {
+        right: 4px;
+      }
+      &.right {
+        left: 4px;
+      }
+    }
+  }
+
+  .calling-msg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
   }
 </style>
