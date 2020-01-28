@@ -1,0 +1,42 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "vue-cli-service serve --port 3000",
+    "build": "vue-cli-service build",
+    "serve": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "connect-history-api-fallback": "^1.6.0",
+    "express": "^4.16.4",
+    "moment": "^2.24.0",
+    "pug": "^2.0.3",
+    "pug-plain-loader": "^1.0.0",
+    "simple-peer": "^9.6.2",
+    "socket.io-client": "^2.2.0",
+    "store": "^2.0.12",
+    "vue": "^2.6.6",
+    "vue-router": "^3.0.1",
+    "webrtc-adapter": "^7.3.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.5.0",
+    "@vue/cli-service": "^3.5.0",
+    "babel-plugin-root-import": "^6.1.0",
+    "node-sass": "^4.13.0",
+    "sass-loader": "^7.1.0",
+    "vue-template-compiler": "^2.5.21"
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}
