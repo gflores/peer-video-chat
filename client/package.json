@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "vue-cli-service serve --port 3010",
-    "dev-build": "vue-cli-service build --mode dev-build && NODE_ENV=development node hint-gen.js > dist/silverchat-client.js",
-    "build": "vue-cli-service build && NODE_ENV=production node hint-gen.js > dist/silverchat-client.js",
+    "dev-build": "vue-cli-service build --mode dev-build && cross-env NODE_ENV=development node hint-gen.js > dist/silverchat-client.js",
+    "build": "vue-cli-service build && cross-env NODE_ENV=production node hint-gen.js > dist/silverchat-client.js",
     "serve": "node server.js"
   },
   "dependencies": {
@@ -26,7 +26,8 @@
     "babel-plugin-root-import": "^6.1.0",
     "node-sass": "^4.13.0",
     "sass-loader": "^7.1.0",
-    "vue-template-compiler": "^2.5.21"
+    "vue-template-compiler": "^2.5.21",
+    "cross-env": "^6.0.3"
   },
   "postcss": {
     "plugins": {

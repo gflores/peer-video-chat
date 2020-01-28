@@ -27,7 +27,8 @@
     "babel-plugin-root-import": "^6.1.0",
     "node-sass": "^4.13.0",
     "sass-loader": "^7.1.0",
-    "vue-template-compiler": "^2.5.21"
+    "vue-template-compiler": "^2.5.21",
+    "cross-env": "^6.0.3"
   },
   "postcss": {
     "plugins": {
