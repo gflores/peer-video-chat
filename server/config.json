@@ -1,9 +1,0 @@
-{
-  "mambuDetails": {
-      "userName": "e2DxuL0fnI",
-      "password": "BUBSMXTx23",
-      "baseUrl": "https://pwcsingapore.sandbox.mambu.com/api",
-      "branchKey": "8a8e8788699503da01699503dae10001"
-  },
-  "databaseUrl": "admin:c4OuxpyBxA4fxGKMcy@video-chat-shard-00-00-nwkht.mongodb.net:27017,video-chat-shard-00-01-nwkht.mongodb.net:27017,video-chat-shard-00-02-nwkht.mongodb.net:27017/test?ssl=true&replicaSet=video-chat-shard-0&authSource=admin&retryWrites=true&w=majority"
-}

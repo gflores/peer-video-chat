@@ -1,4 +1,11 @@
-cd ./client
+cd ./app
+
+git checkout master
+rm -rf dist
+npm run build
+git add dist/
+
+cd ../client
 
 git checkout master
 rm -rf dist

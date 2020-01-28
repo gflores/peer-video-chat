@@ -1,7 +1,9 @@
 import axios from "axios";
 import store from "store";
 
-let host = location.protocol + `//${location.host.split(":")[0]}:4000/`;
+// let host = location.protocol + `//${location.host.split(":")[0]}:4000/`;
+let host = process.env.VUE_APP_API_URL;
+
 let playRoomSocket = require('socket.io-client')(host + "play", {rejectUnauthorized: false});
 
 function getSocketId() {

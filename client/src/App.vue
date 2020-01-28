@@ -1,12 +1,17 @@
 <template>
-    <router-view/>
+    <PlayClient :roomId="roomId" class="silverchat-widget"/>
 </template>
 
 <script>
 import './components/index.js';
+import PlayClient from './pages/ClientWidget';
 
 export default {
-    
+    components: {
+        PlayClient
+    },
+    props: ['roomId']
+
 }
 </script>
 
