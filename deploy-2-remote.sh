@@ -4,16 +4,16 @@ git pull
 projectName="peer-video-chat"
 
 
-cd ~/$projectName/server
+cd ~/$projectName/api
 rm -rf dist
 npm install
 npm run build
-now=$(pm2 pid $projectName"_server")
+now=$(pm2 pid $projectName"_api")
 if [ -z $now ]; 
 then
-pm2 start dist/server.js --name $projectName"_server"
+pm2 start dist/server.js --name $projectName"_api"
 else
-pm2 restart $projectName"_server"
+pm2 restart $projectName"_api"
 fi
 
 
