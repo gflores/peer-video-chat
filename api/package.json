@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NO_SSL='true' nodemon --exec babel-node src/server.js",
     "build": "babel src --out-dir dist -s",
-    "serve": "node dist/server.js"
+    "serve": "cross-env NODE_ENV='production' node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "axios": "^0.18.0",
     "bcrypt": "^3.0.5",
     "body-parser": "^1.18.3",
+    "config": "^3.2.5",
     "cors": "^2.8.5",
     "cron": "^1.7.1",
     "crypto-promise": "^2.1.0",

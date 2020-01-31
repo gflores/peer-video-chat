@@ -28,10 +28,8 @@ async function apiRequest(path, data) {
       console.log("path: " + path);
       console.log("data: " + data);
     }
-    
     throw e;
   }
-
 
   return res.data;
 }

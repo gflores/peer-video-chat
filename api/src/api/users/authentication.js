@@ -1,8 +1,8 @@
 import app from "~/src/server.js";
 
 import Users from "~/src/models/users.js";
-import { mambuGet, mambuPost } from "~/src/lib/api.js";
-import config from '~/src/config';
+
+import config from 'config';
 import { sendRawEmail } from "~/src/lib/mailer";
 import bcrypt from "bcrypt";
 import crypto from "crypto-promise";
@@ -79,30 +79,27 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/verify", async (req, res) => {
-  let { verificationToken } = req.body;
+  let { verificationToken, password } = req.body;
 
   let user = await Users.findOne({ verificationToken });
+  if (user == null) {
+    return res.status(400).json("Token has expired or is invalid");
+  }
 
+  let passwordHash = await bcrypt.hash(password, saltRounds);
+  password = "encrypted in 'passwordHash'";
 
-  let data = await mambuPost("/clients/", {
-    client: {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      assignedBranchKey: config.mambuDetails.branchKey
-    }
-  });
-
-  let users = await Users.update({
+  await Users.update({
     _id: user._id
   }, {
     $set: {
-      encodedKey: data.client.encodedKey,
       isVerified: true,
-      verificationToken: null
+      verificationToken: null,
+      passwordHash
     }
-    });
+  });
 
-  await sendRawEmail(user.email, "Welcome to bankos !", "You were verified");
+  await sendRawEmail(user.email, "You are verified", `Congrats ${user.firstName}, you are verified !`);
 
   res.json({ message: "ok !" });
 });
@@ -121,17 +118,14 @@ app.post("/login", async (req, res) => {
   if (isRightPassword == true) {
     let buffer = await crypto.randomBytes(16);
     let authToken = buffer.toString('hex');
-    let twoFactorCode = Math.round(Math.random() * (999999 - 100000) + 100000);
 
     await Users.update({ _id: user._id }, {
       $set: {
         authToken,
-        twoFactorCode,
         lastLoginDate: new Date()
       }
     });
 
-    await sendRawEmail(user.email, "Secret Code for login", "Your code is: " + twoFactorCode);
     res.json({ authToken });
   } else {
     return res.status(400).json({ message: "Invalid Password" });

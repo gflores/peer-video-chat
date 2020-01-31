@@ -4,19 +4,57 @@ import logger from './logger';
 import {sendRawEmail, sendHtmlEmail} from './mailer';
 import Logs from '~/src/models/logs';
 
-async function authMiddleware(req, res, next) {
-  let authToken = req.get("Authorization");
-  if (authToken == null) {
-    return res.sendStatus(401);
+async function getAuthUser(authToken) {
+  if (authToken == null || authToken == "") {
+    return null;
   }
-
   let user = await Users.findOne({"authToken": authToken});
-  if (user == null || user.twoFactorCode != null) {
-    return res.status(401).json({errorMessage: "Unauthorized Access"});
+  if (user == null) {
+    return null;
   }
-  req.user = user;
+  return user;
+}
 
-  return next();
+async function authMiddleware(req, res, next) {
+  let user = await getAuthUser(req.get("Authorization"));
+  if (user != null) {
+    req.user = user;
+    return next();
+  }
+  return res.sendStatus(401);
+}
+
+async function memberAuthMiddleware(req, res, next) {
+  let user = await getAuthUser(req.get("Authorization"));
+  if (user != null && (user.role == "member" || user.role == "manager" || user.role == "owner")) {
+    req.user = user;
+    return next();
+  }
+  return res.sendStatus(401);
+}
+async function managerAuthMiddleware(req, res, next) {
+  let user = await getAuthUser(req.get("Authorization"));
+  if (user != null && (user.role == "manager" || user.role == "owner")) {
+    req.user = user;
+    return next();
+  }
+  return res.sendStatus(401);
+}
+async function ownerAuthMiddleware(req, res, next) {
+  let user = await getAuthUser(req.get("Authorization"));
+  if (user != null && (user.role == "owner")) {
+    req.user = user;
+    return next();
+  }
+  return res.sendStatus(401);
+}
+async function adminAuthMiddleware(req, res, next) {
+  let user = await getAuthUser(req.get("Authorization"));
+  if (user != null && (user.isAdmin == true)) {
+    req.user = user;
+    return next();
+  }
+  return res.sendStatus(401);
 }
 
 async function exceptionMiddleware(req, res, next){
@@ -134,6 +172,11 @@ function hideObjectSensitiveData(objectToClean) {
 
 export {
   authMiddleware,
+  memberAuthMiddleware,
+  managerAuthMiddleware,
+  ownerAuthMiddleware,
+  adminAuthMiddleware,
+
   exceptionMiddleware,
   loggerMiddleware
 }

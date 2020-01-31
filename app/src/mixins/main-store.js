@@ -40,10 +40,12 @@ Vue.mixin({
 
     async storeMyProfile() {
       try {
-        let {user, room} = await apiRequest("my-profile", {
-        });
-        this.setUser(user);
-        // this.setRoom(room);
+        if (store.get("authToken") != null) {          
+          let {user, room} = await apiRequest("my-profile", {});
+          console.log("Receiving: ");
+          this.setUser(user);
+          // this.setRoom(room);
+        }
       } catch (e) {}
     },
     setUser(user) {
@@ -51,6 +53,10 @@ Vue.mixin({
     },
     setRoom(room) {
       this.store.room = room;
+    },
+    logoutUser(){
+      store.remove("authToken");
+      this.$router.push('/login');
     }
   },
   computed: {

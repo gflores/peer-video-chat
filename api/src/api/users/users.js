@@ -2,10 +2,9 @@ import app from "~/src/server.js";
 
 import Users from "~/src/models/users.js";
 
-import config from '../../config';
+import config from 'config';
 
-import {mambuGet, mambuPost} from "~/src/lib/api.js";
-import { authMiddleware } from "~/src/lib/middlewares";
+import { authMiddleware, adminAuthMiddleware } from "~/src/lib/middlewares";
 import bcrypt from 'bcrypt';
 import logger from "~/src/lib/logger";
 
@@ -19,9 +18,36 @@ const saltRounds = 10;
 async function updateUser(updateObject, user){
 }
 
-app.get("/users", async (req, res) => {
-  let users = await Users.find({});
-  res.json({users: users});
+app.post("/get-user-from-verif-token", async (req, res) => {
+  let {verificationToken} = req.body;
+
+  if (verificationToken == null || verificationToken == "") {
+    return res.status(400).json("Token cannot be empty");
+  }
+
+  let user = await Users.findOne({verificationToken});
+
+  if (user == null) {
+    return res.status(400).json("Token has expired or is invalid");
+  }
+
+  res.json(user);
+});
+
+app.post("/admin/get-admins", adminAuthMiddleware, async (req, res) => {
+  let users = await Users.find({isAdmin: true});
+  res.json({
+    users: users
+  });
+});
+
+app.post("/admin/delete-user", adminAuthMiddleware, async (req, res) => {
+  let {id} = req.body;
+
+  let users = await Users.remove({_id: id});
+  res.json({
+    message: "ok"
+  });
 });
 
 app.post("/my-profile", authMiddleware, async (req, res) => {
@@ -37,12 +63,6 @@ app.post("/users/update", authMiddleware, async(req, res) => {
   let user = req.user;
 
   try {
-    await mambuPost(`/clients/${user.encodedKey}`, {client: {
-      firstName,
-      lastName,
-      assignedBranchKey: config.mambuDetails.branchKey
-    }});
-
     res.json({});
   }
   catch (e) {
