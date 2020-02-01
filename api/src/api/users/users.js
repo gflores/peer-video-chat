@@ -2,6 +2,7 @@ import app from "~/src/server.js";
 
 import Users from "~/src/models/users.js";
 import Teams from "~/src/models/teams.js";
+import Rooms from "~/src/models/rooms.js";
 
 import config from 'config';
 
@@ -37,10 +38,14 @@ app.post("/admin/delete-user", adminAuthMiddleware, async (req, res) => {
 
 app.post("/my-profile", authMiddleware, async (req, res) => {
   if (req.user.teamId != null) {
-    let team = await Teams.findOne(req.user.teamId);
+    let [team, room] = await Promise.all([
+      Teams.findOne(req.user.teamId),
+      Rooms.findOne({teamId: req.user.teamId})
+    ])
     res.json({
       user: req.user,
-      team: team
+      team: team,
+      room: room
     });
   } else {
     res.json({

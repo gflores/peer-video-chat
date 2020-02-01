@@ -67,7 +67,7 @@ app.post("/admin/invite-member", adminAuthMiddleware, async (req, res) => {
     lastName,
     email,
     role,
-    teamId,
+    teamId: team._id,
     verificationToken,
     isVerified: false
   });

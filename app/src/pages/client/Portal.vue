@@ -1,10 +1,14 @@
 <template lang="pug">
-  .dashboard Portal
+  portal(:socketRoomId="store.room.socketRoomId")
+
 </template>
 
 <script>
-export default {
 
+import portal from "./c-portal.vue";
+
+export default {
+  components: {portal}
 }
 </script>
 

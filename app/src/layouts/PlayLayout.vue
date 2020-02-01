@@ -1,6 +1,6 @@
 <template lang="pug">
   .play-layout
-    router-link(to="/dashboard") Home
+    router-link(to="/test") Home
     br
     br
     component(v-bind:is="page")

@@ -11,7 +11,7 @@ import WebsocketMonitor from './pages/websocket-monitor/WebsocketMonitor.vue';
 
 import Verify from './pages/credentials/Verify.vue';
 
-import Dashboard from './pages/dashboard/Dashboard.vue';
+import TestRooms from './pages/test/Rooms.vue';
 
 import AdminLayout from './layouts/AdminLayout.vue';
 import AdminDashboard from './pages/admin/Dashboard.vue';
@@ -42,10 +42,11 @@ export default new Router({
     {path: "/admin", component: AdminLayout, props: {page: AdminDashboard}},
     {path: "/admin/teams/:id", component: AdminLayout, props: {page: AdminTeam}},
 
-    {path: "/rooms", component: PlayLayout, props: {page: Dashboard}},
-    {path: "/play/:socketRoomId/client", component: PlayClient},
-    {path: "/play/:socketRoomId/client/preview", component: PlayLayout, props: {page: PlayClient}},
-    {path: "/play/:socketRoomId/admin", component: PlayLayout, props: {page: PlayAdmin}},
+    {path: "/test", redirect: "/test/rooms"},
+    {path: "/test/rooms", component: PlayLayout, props: {page: TestRooms}},
+    {path: "/test/play/:socketRoomId/client", component: PlayClient},
+    {path: "/test/play/:socketRoomId/client/preview", component: PlayLayout, props: {page: PlayClient}},
+    {path: "/test/play/:socketRoomId/admin", component: PlayLayout, props: {page: PlayAdmin}},
 
     {path: "/websocket-monitor", component: WebsocketMonitor},
 
