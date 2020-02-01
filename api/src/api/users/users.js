@@ -1,6 +1,7 @@
 import app from "~/src/server.js";
 
 import Users from "~/src/models/users.js";
+import Teams from "~/src/models/teams.js";
 
 import config from 'config';
 
@@ -17,22 +18,6 @@ const saltRounds = 10;
  */
 async function updateUser(updateObject, user){
 }
-
-app.post("/get-user-from-verif-token", async (req, res) => {
-  let {verificationToken} = req.body;
-
-  if (verificationToken == null || verificationToken == "") {
-    return res.status(400).json("Token cannot be empty");
-  }
-
-  let user = await Users.findOne({verificationToken});
-
-  if (user == null) {
-    return res.status(400).json("Token has expired or is invalid");
-  }
-
-  res.json(user);
-});
 
 app.post("/admin/get-admins", adminAuthMiddleware, async (req, res) => {
   let users = await Users.find({isAdmin: true});
@@ -51,10 +36,17 @@ app.post("/admin/delete-user", adminAuthMiddleware, async (req, res) => {
 });
 
 app.post("/my-profile", authMiddleware, async (req, res) => {
-  res.json({
-    user: req.user,
-    room: req.room ? req.room.constructSnapshotMessage() : null
-  });
+  if (req.user.teamId != null) {
+    let team = await Teams.findOne(req.user.teamId);
+    res.json({
+      user: req.user,
+      team: team
+    });
+  } else {
+    res.json({
+      user: req.user
+    });
+  }
 });
 
 app.post("/users/update", authMiddleware, async(req, res) => {

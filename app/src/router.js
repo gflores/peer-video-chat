@@ -15,12 +15,14 @@ import Dashboard from './pages/dashboard/Dashboard.vue';
 
 import AdminLayout from './layouts/AdminLayout.vue';
 import AdminDashboard from './pages/admin/Dashboard.vue';
+import AdminTeam from './pages/admin/Team.vue';
 
 import CredentialsLayout from './layouts/CredentialsLayout.vue';
 import Login from './pages/credentials/Login.vue';
 
 import ClientLayout from './layouts/ClientLayout.vue';
 import ClientDashboard from './pages/client/Dashboard.vue';
+import ClientPortal from './pages/client/Portal.vue';
 
 Vue.use(Router)
 
@@ -28,15 +30,17 @@ export default new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
-    {path: "/", redirect: "/dashboard"},
-
+    // {path: "/", redirect: "/dashboard"},
+    // {path: "/", component: ClientLayout, props: {page: ClientDashboard}},
+    {path: "/", component: ClientLayout, props: {page: ClientPortal}},
+    
     {path: "/login", component: CredentialsLayout, props: {page: Login}},
     {path: "/verify/:verificationToken", component: Verify},
 
-    {path: "/dashboard", component: ClientLayout, props: {page: ClientDashboard}},
 
-    {path: "/admin/", redirect: "/admin/dashboard"},
-    {path: "/admin/dashboard", component: AdminLayout, props: {page: AdminDashboard}},
+    // {path: "/admin/", redirect: "/admin/dashboard"},
+    {path: "/admin", component: AdminLayout, props: {page: AdminDashboard}},
+    {path: "/admin/teams/:id", component: AdminLayout, props: {page: AdminTeam}},
 
     {path: "/rooms", component: PlayLayout, props: {page: Dashboard}},
     {path: "/play/:socketRoomId/client", component: PlayClient},

@@ -35,6 +35,8 @@ async function sendHtmlEmail({recipient, subject, templateName, data}){
     subject: subject,
     html: html
   });
+
+  console.log("Successfully Sending email to:", recipient);
 }
 
 function readAndFillHtml(templateName, data){

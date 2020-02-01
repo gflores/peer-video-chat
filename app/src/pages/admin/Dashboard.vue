@@ -1,9 +1,18 @@
 <template lang="pug">
   .dashboard
-    .admins(v-for="admin in admins")
-      .admin {{admin.firstName}} {{admin.lastName}} {{admin.email}} {{admin.isVerified ? "" : "-UNVERIFIED-"}}
+    h2 Teams
+    .teams
+      .team(v-for="team in teams")
+        router-link(:to="'/admin/teams/' + team._id") {{team.name}}
+    input(v-model="teamName" placeholder="name")
+    button(@click="createTeam") Create Team
+
+    h2 Admins
+    .admins
+      .admin(v-for="admin in admins") {{admin.firstName}} {{admin.lastName}} {{admin.email}} {{admin.isVerified ? "" : "-UNVERIFIED-"}}
         button(@click="deleteUser(admin)") delete
 
+    h3 Invite new Admin
     input(v-model="email" placeholder="email")
     input(v-model="firstName" placeholder="first name")
     input(v-model="lastName" placeholder="last name")
@@ -19,11 +28,16 @@ export default {
       email: "",
       firstName: "",
       lastName: "",
-      admins: []
+      admins: [],
+      teamName: "",
+      teams: []
     }
   },
-  created() {
-    this.getAdmins();
+  async created() {
+    await Promise.all([
+      this.getAdmins(),
+      this.getTeams()
+    ]);
   },
   methods: {
     async inviteAdmin() {   
@@ -39,9 +53,22 @@ export default {
 
       await this.getAdmins();
     },
+    async createTeam() {   
+      await apiRequest("create-team", {
+        name: this.teamName,
+      });
+
+      this.teamName = "";
+
+      await this.getTeams();
+    },
     async getAdmins() {
       let {users} = await apiRequest("admin/get-admins")
       this.admins = users;
+    },
+    async getTeams() {
+      let {teams} = await apiRequest("admin/get-teams")
+      this.teams = teams;
     },
     async deleteUser(user) {
       if (user.firstName == "Gael" || user.firstName == "Julius") {

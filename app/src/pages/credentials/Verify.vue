@@ -1,5 +1,7 @@
 <template lang="pug">
   .verify(v-if="isDataReady")
+    p(v-if="team != null") Invited to {{team.name}}
+    p role: {{user.role}}
     p Welcome {{user.firstName}}, please enter your password
     input(v-model="password" type="password" placeholder="password")
     input(v-model="repeatPassword" type="password" placeholder="confirm password")
@@ -15,6 +17,7 @@ export default {
   data() {
     return {
       user: null,
+      team: null,
       isDataReady: false,
       password: "",
       repeatPassword: "",
@@ -23,9 +26,12 @@ export default {
   },
   async created() {
     try {
-      this.user = await apiRequest("get-user-from-verif-token", {
+      let {user, team} = await apiRequest("get-info-from-verif-token", {
         verificationToken: this.$route.params.verificationToken
       });
+      this.user = user;
+      this.team = team;
+
       this.isDataReady = true;
     } catch (e) {
       this.errorMessage = e.response.data;
