@@ -2,13 +2,13 @@
   .client-layout(v-if="isDataReady")
     .header
       .team-name {{store.team.name}}
-      .user-name Hi, {{store.user.firstName}} !
+      .user-name Hi, {{store.user.firstName}}
 
     .nav-bar
-      .nav-item(@click="logout") Portal
-      .nav-item(@click="logout") Setup
+      router-link(to="/").nav-item(@click="logout") Portal
+      router-link(to="/setup").nav-item(@click="logout") Setup
       .nav-item.last(@click="logout") Log out
-    content
+    .content
       component(v-bind:is="page")
 
 </template>
@@ -40,12 +40,12 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
   @font-face {
       font-family: 'PantonBlack';
       src: url(/fonts/PantonBlack.otf)
   }
-  .home {
+  .client-layout {
     position: absolute;
     height: 100%;
     width: 100%;
@@ -60,6 +60,10 @@ export default {
     background: #26292c;
     color: hsla(210, 4%, 90%, 1);
 
+    @media only screen and (min-width: 768px) {
+      padding: 0px 48px;
+    }
+
     .team-name {
       font-family: 'PantonBlack';
       font-size: 18px;
@@ -69,8 +73,10 @@ export default {
     .user-name {
       position: absolute;
       right: 16px;
+      @media only screen and (min-width: 768px) {
+        right: 48px;
+      }
     }
-
   }
 
   .nav-bar {
@@ -89,10 +95,14 @@ export default {
       height: 100%;
       display: flex;
       align-items: center;
+
+      @media only screen and (min-width: 768px) {
+        padding: 0px 48px;
+      }
+
       &:hover {
         background: lightgray;
       }
-
       &.last {
         position: absolute;
         right: 0;//16px;
@@ -100,8 +110,16 @@ export default {
       }
     }
   }
-  content {
+  .content {
+    position: relative;
     height: calc(100% - 80px);
     width: 100%;
+    display: flex;
+    justify-content: center;
+    background: hsla(200, 20%, 96%, 1);
+  }
+  a {
+    color: #26292c;
+    text-decoration: none;
   }
 </style>

@@ -1,48 +1,55 @@
 <template lang="pug">
   .c-portal(v-if="isDataReady")
-    div ADMIN - Room is {{room.name}}
-    h3 Waiting clients:
-    div(v-for="convo in convos") {{convo.clientId}} {{convo.state}} {{convo.adminId}}
-    h3 Connected admins:
-    div(v-for="admin in room.admins") {{admin}}
+    .top-section
+      a(:href="previewLink" target="_blank") Preview
+      .square-counter.waiting-convo-nb {{waitingConvos.length}}
+      .square-counter.total-convo-nb {{this.totalConvos}}
 
-    <br><br><br><br><br>
-    div(v-if="store.connectedRoom == null")
-      p You haven't joined a room
-      button(@click="joinRoom()") Join Room
+    .container-flex
+      .status-panel
+        //- 1
+        template(v-if="store.connectedRoom == null")
+          .text You are offline
+          button.green(@click="joinRoom()") Join Room
+        //- 2 & 3
+        template(v-else-if="store.connectedConvo == null")
+          .text.green You are online
+          button.grey(@click="leaveRoom()") Leave Room
+        //- 4
+        template(v-else)
+          .text You are connected to a visitor
+          button.grey(@click="endConvo()") End Conversation
 
-    div(v-else)
-      p You have joined the room {{store.connectedRoom.name}}
-      button(@click="leaveRoom()") Leave Room
+      .action-panel
+        //- 3
+        template(v-if="store.connectedRoom != null && store.connectedConvo == null && waitingConvos.length > 0")
+          template(v-if="isFirstContact == false")
+            .text A visitor is calling
+            button(@click="recordVideo = true; nextConvo()") Video Call
+            button.border.green(@click="recordVideo = false; nextConvo()") Voice Only
+          template(v-else)
+            .big-text Connecting...
+            
+        //- 4
+        template(v-else-if="store.connectedConvo != null && hasAcceptedCall == true")
+          .text {{recordVideo ? "Your Camera is ON" : "Your Camera is OFF"}}
+          template(v-if="recordVideo")
+            button.border.grey(@click="recordVideo = !recordVideo; updateUserMediaStream()") Turn Video OFF
+          template(v-else)
+            button.border.green(@click="recordVideo = !recordVideo; updateUserMediaStream()") Turn Video ON
 
-      div(v-if="store.connectedConvo == null")
-        p Not having any conversation
-        div(v-if="waitingConvos.length > 0")
-          p Someone is Waiting !
-          button(@click="recordVideo = false; nextConvo()") Join With CALL
-          button(@click="recordVideo = true; nextConvo()") Join With VIDEO
-      div(v-else)
-        video(muted="muted" playsinline="playsinline")
-        p You are having conversation with: {{store.connectedConvo.clientId}}
-        button(@click="endConvo()") End Conversation
+        //- 4.5
+        template(v-else-if="store.connectedConvo != null && hasAcceptedCall == false")
+          template(v-if="isFirstContact == false")
+            .text Please reconnect
+            button(@click="recordVideo = true; answerCall()") Reconnect with Video
+            button.border.green(@click="recordVideo = false; answerCall()") Reconnect with Voice
+          template(v-else)
+            .big-text Connecting...
 
-        div(v-if="hasAcceptedCall == false")
-          button(@click="recordVideo = false; answerCall()") Reconnect to CALL !
-          button(@click="recordVideo = true; answerCall()") Reconnect to VIDEO !
-        div(v-else)
-          p {{recordVideo ? "Your Camera is ON" : "Your Camera is OFF"}}
-          button(@click="recordVideo = !recordVideo; updateUserMediaStream()") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
-
-
-        //- div(v-if="incomingSignal != null")
-        //-   p Someone is calling !
-        //-   button(@click="acceptCall()") (old) acceptCall
+        template(v-else)
+          .big-text No callers
         
-        //- button(@click="recordVideo = !recordVideo; updateUserMediaStream()") {{recordVideo ? "Turn Video OFF" : "Turn Video ON"}}
-        //- button(@click="recordAudio = !recordAudio; updateUserMediaStream()") {{recordAudio ? "Turn Microphone OFF" : "Turn Microphone ON"}}
-
-
-
 </template>
 
 <script>
@@ -66,6 +73,7 @@ export default {
   props: ["socketRoomId"],
   data() {
     return {
+      isFirstContact: false,
       isDataReady: false,
       newRoomName: "",
       room: null,
@@ -82,7 +90,8 @@ export default {
       mySeed: null,
       clientSocketId: null,
       mySignals: [],
-      lastPeerSetupDate: null
+      lastPeerSetupDate: null,
+      totalConvos: null
     };
   },
   async created() {
@@ -92,7 +101,7 @@ export default {
     await this.fetchAllData();
 
     await Promise.all([this.socketConnectToRoom(), this.socketConnectToConvo()]);
-
+    await this.getStats();
     this.isDataReady = true;
     // await this.simplePeerSetup();
   },
@@ -260,9 +269,10 @@ export default {
         }
       });
       // When client notify he created a convo
-      playRoomOn("admin/notify-new-convo", ({convo}) => {
+      playRoomOn("admin/notify-new-convo", async ({convo}) => {
         console.log("NEW CONVO: ", convo);
         this.convos.push(convo);
+        await this.getStats();
       });
       playRoomOn("user-disconnected", ({id}) => {
         console.log("THIS SOCKET ID DISCONNECTED: ", id);
@@ -292,6 +302,7 @@ export default {
       location.reload();
     },
     async nextConvo() {
+      this.isFirstContact = true;
       await this.simplePeerSetup();
       await apiRequest("admin/next-convo", {});
       await this.fetchAllData();
@@ -304,19 +315,162 @@ export default {
       await this.fetchAllData();
     },
     async answerCall(){
+      this.isFirstContact = true;
       await this.simplePeerSetup();
       this.hasAcceptedCall = true;
       // this.tryConnectIncomingSignal();
+    },
+    async getStats(){
+      let {totalConvos} = await apiRequest("get-room-stats", {roomId: this.room._id});
+
+      this.totalConvos = totalConvos;
     }
   },
   computed: {
     waitingConvos() {
       return this.convos.filter(c => c.state == "waiting");
+    },
+    previewLink() {
+      return process.env.VUE_APP_SERVER_URL + "?id=" + this.room.socketRoomId
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+  .c-portal {
+    height: 100%;
+    width: 100%;
+    background: white;
+    position: relative;
+  }
+  .top-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    height: 40px;
+    align-items: flex-end;
+    a {
+      font-size: 24px;
+      text-decoration: none;
+      color: grey;
+    }
+  }
+  .square-counter {
+    display: inline-block;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 28px;
+    padding: 0 8px;
+    border-radius: 2px;
+
+    &.waiting-convo-nb{
+      position: absolute;
+      right: 0;
+      top: 0px;
+      border: hsla(4, 65%, 54%, 1) 4px solid;
+      color: hsla(4, 65%, 54%, 1);
+    }
+    &.total-convo-nb{
+      position: absolute;
+      left: 0;
+      top: 0px;
+      border: hsla(120, 36%, 48%, 1) 4px solid;
+      color: hsla(120, 36%, 48%, 1);
+    }
+  }
+
+  button {
+    outline: 0;
+    width: calc(100%);
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    background: hsla(120, 91%, 34%, 1);
+    border: 0;
+    border-radius: 4px;
+    height: 55px;
+    display: block;
+
+    &.border {
+      box-shadow: inset 0 0 0 4px;
+      background: transparent;
+      &.green {
+        color: hsla(120, 96%, 26%, 1);
+      }
+      &.grey {
+        color: hsla(0, 0%, 32%, 1);
+      }
+    }
+    &:not(.border) {
+      &.green {
+        color: white;
+        background: hsla(120, 91%, 34%, 1);;
+      }
+      &.grey {
+        color: white;
+        background: grey;
+      }      
+    }
+  }
+
+  .container-flex {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 40px);
+    text-align: center;
+  }
+  .status-panel {
+    position: relative;
+    padding: 0px 20px;
+
+    width: calc(100% - 40px);
+    flex-grow: 1;
+
+    button, .text {
+      position: relative;
+      top: calc(15%);
+    }
+    .text {
+      margin-bottom: 18px;
+      &.green {
+        color: hsla(120, 91%, 34%, 1)
+      }
+    }
+    // .join-room-button {
+    //   color: white;
+    //   background: hsla(120, 91%, 34%, 1);
+    // }
+    // .leave-room-button {
+    //   color: white;
+    //   background: grey;
+    // }
+  }
+  
+  .action-panel {
+    padding: 20px 20px 40px;
+    width: calc(100% - 40px);
+    background: hsl(120, 55%, 78%);
+
+    .text {
+      margin-bottom: 18px;
+      &.green {
+        color: hsla(120, 91%, 34%, 1)
+      }
+    }
+    .big-text {
+      margin-top: 20px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button:last-of-type {
+      margin-top: 20px;
+    }
+  }
 
 </style>

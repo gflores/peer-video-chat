@@ -32,7 +32,7 @@ app.post("/create-team", authMiddleware, async (req, res) => {
 
   await Rooms.insert({
     name: "Main",
-    socketRoomId: name + "[main]",
+    socketRoomId: team._id + "/main",
     admins: [],
     teamId: team._id
   });

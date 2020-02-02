@@ -11,11 +11,14 @@
       Silverchat={init({roomId,selector}){this.roomId=roomId;this.selector=selector}}
     </script>
     <script type="text/javascript">
-      Silverchat.init({roomId: "xrp", selector: "#app"});
+      let id = location.search.split("=")[1];
+      if (id != null) {
+        Silverchat.init({roomId: id, selector: "#app"});
+      }
     </script>
 
     
-    <title>Silverchat</title>
+    <title>Silverchat Client</title>
   </head>
   <body>
     <noscript>

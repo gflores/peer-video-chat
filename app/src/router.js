@@ -23,6 +23,7 @@ import Login from './pages/credentials/Login.vue';
 import ClientLayout from './layouts/ClientLayout.vue';
 import ClientDashboard from './pages/client/Dashboard.vue';
 import ClientPortal from './pages/client/Portal.vue';
+import ClientSetup from './pages/client/Setup.vue';
 
 Vue.use(Router)
 
@@ -33,9 +34,10 @@ export default new Router({
     // {path: "/", redirect: "/dashboard"},
     // {path: "/", component: ClientLayout, props: {page: ClientDashboard}},
     {path: "/", component: ClientLayout, props: {page: ClientPortal}},
+    {path: "/setup", component: ClientLayout, props: {page: ClientSetup}},
     
     {path: "/login", component: CredentialsLayout, props: {page: Login}},
-    {path: "/verify/:verificationToken", component: Verify},
+    {path: "/verify/:verificationToken", component: CredentialsLayout, props: {page: Verify}},
 
 
     // {path: "/admin/", redirect: "/admin/dashboard"},

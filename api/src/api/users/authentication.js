@@ -109,8 +109,8 @@ app.post("/login", async (req, res) => {
 
   let user = await Users.findOne({ email });
 
-  if (user.isVerified == false) {
-    return res.status(400).json({ message: "You didn't verify" });
+  if (user == null || user.isVerified == false) {
+    return res.status(400).json({ message: "Invalid user" });
   }
 
   let isRightPassword = await bcrypt.compare(password, user.passwordHash);
