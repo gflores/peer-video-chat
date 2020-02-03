@@ -34,10 +34,15 @@ export default {
   }
   .top {
     background-image: linear-gradient(158deg, hsl(120, 91%, 34%), hsla(150, 67%, 49%, 1));
-    height: 70.41485%;
+    height: 91%;
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    @media only screen and (min-width: 720px) {
+      height: 70.41485%;
+    }
+
 
     .logo {
       margin-top: 80px;
@@ -50,6 +55,9 @@ export default {
   }
   .bottom {
     background: black;
-    height: 29.58515%;
+    height: 9%;
+    @media only screen and (min-width: 720px) {
+      height: 29.58515%;
+    }
   }
 </style>
