@@ -13,7 +13,7 @@ import config from 'config';
 app.post("/create-team", authMiddleware, async (req, res) => {
   let {name} = req.body;
 
-  if (req.user.teamId != null) {
+  if (req.user.isAdmin != true && req.user.teamId != null) {
     return res.status(400).json({message: "You are already part of a team"});    
   }
   if (name == null || name == "") {
