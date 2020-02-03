@@ -41,7 +41,7 @@ async function sendHtmlEmail({recipient, subject, templateName, data}){
 
 function readAndFillHtml(templateName, data){
   return new Promise((resolve, reject) => {
-    fs.readFile(path.join(__dirname, `emailTemplates/${templateName}.html`),  (err, fileBuffer) => {
+    fs.readFile(path.join(__dirname, `../../emailTemplates/${templateName}.html`),  (err, fileBuffer) => {
       if (err){
         console.log(err);
         reject(err);
