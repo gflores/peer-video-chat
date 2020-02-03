@@ -24,7 +24,7 @@
         //- 3
         template(v-if="store.connectedRoom != null && store.connectedConvo == null && waitingConvos.length > 0")
           template(v-if="isFirstContact == false")
-            .text A visitor is calling
+            .text <b>A visitor is calling</b>
             button(@click="recordVideo = true; nextConvo()") Video Call
             button.border.green(@click="recordVideo = false; nextConvo()") Voice Only
           template(v-else)
@@ -48,7 +48,8 @@
             .big-text Connecting...
 
         template(v-else)
-          .big-text No callers
+          .big-text(v-if="waitingConvos.length == 0") No callers
+          .big-text(v-else) <b>Someone is calling</b>
         
 </template>
 
@@ -68,6 +69,8 @@ let StunTurnList = {iceServers: [
 ]};
 
 let currentStream = null;
+
+let notificationSeed = Math.round(Math.random() * 1000000);
 
 export default {
   props: ["socketRoomId"],
@@ -116,19 +119,16 @@ export default {
     },
     async socketConnectToRoom() {
       if (this.store.connectedRoom != null && this.socketConnectedToRoom == false) {
+        Notification.requestPermission();
         this.socketConnectedToRoom = true;
         return playRoomEmit("admin/join-room", {});
       }
-      
-      return Promise.resolve();
     },
     async socketConnectToConvo() {
       if (this.store.connectedConvo != null && this.socketConnectedToConvo == false) {
         this.socketConnectedToConvo = true;
         return playRoomEmit("setup-convos", {});
       }
-
-      return Promise.resolve();
     },
     async simplePeerSetup() {
       if (this.lastPeerSetupDate == null || moment() - this.lastPeerSetupDate > 2000) {
@@ -292,6 +292,7 @@ export default {
       });
       await this.fetchAllData();
       await this.socketConnectToRoom();
+      Notification.requestPermission();
     },
     async endConvo() {
       await apiRequest("admin/end-convo", {});
@@ -328,7 +329,14 @@ export default {
   },
   computed: {
     waitingConvos() {
-      return this.convos.filter(c => c.state == "waiting");
+      let res = this.convos.filter(c => c.state == "waiting");
+      if (res.length > 0) {
+        new Notification('Someone calling...', {
+          body: `${res.length} ${res.length == 1 ? "visitor" : "visitors"} sent a request to connect`,
+          tag: `${notificationSeed}/${res.length}`
+        });
+      }
+      return res;
     },
     previewLink() {
       return process.env.VUE_APP_SERVER_URL + "?id=" + this.room.socketRoomId

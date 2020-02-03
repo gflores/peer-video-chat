@@ -7,26 +7,27 @@ import './mixins/util-functions.js';
 
 Vue.config.productionTip = false
 
-let tmpRoomId;
-let tmpSelector;
+let tmpData = null;
 
 if (window.Silverchat != null) {
-  tmpRoomId = window.Silverchat.roomId;
-  tmpSelector = window.Silverchat.selector;  
+  tmpData = window.Silverchat.d;
 }
 
 window.Silverchat = {
-  init({roomId, selector}) {
+  init({roomId, selector, isMicRequired = true}) {
     new Vue({
       render: h => h(App, {
-        props: {roomId}
+        props: {roomId, isMicRequired}
       })
     }).$mount(selector);
   }
 };
 
-if (tmpRoomId != null && tmpSelector != null) {
-  Silverchat.init({roomId: tmpRoomId, selector: tmpSelector});
-  Silverchat.roomId = tmpRoomId;
-  Silverchat.selector = tmpSelector;
+if (tmpData != null) {
+  Silverchat.init({
+    roomId: tmpData.roomId,
+    selector: tmpData.selector,
+    isMicRequired: tmpData.isMicRequired
+  });
+  Silverchat.d = tmpData;
 }

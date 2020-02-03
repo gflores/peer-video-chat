@@ -12,11 +12,15 @@
             | Instant Call
             span.bolt-wrapper
               Bolt.right
+
         template(v-else)
           button.reconnect-call(@click="answerCall()") Reconnect call
 
       template(v-else-if="connectedSeed == null")
-        .calling-msg(v) Calling...
+        
+        .calling-msg(v-if="askingForPermission") Please Allow Microphone
+        .calling-msg(v-else-if="deniedPermission && isMicRequired") Microphone Denied :(
+        .calling-msg(v-else) {{deniedPermission ? "One-way call..." : "Calling..."}}
 
       template(v-else)
         video(muted="muted" playsinline="playsinline")
@@ -61,10 +65,12 @@ export default {
       connectedSeed: null,
       mySeed: null,
       adminSocketId: null,
-      isFirstContact: false
+      isFirstContact: false,
+      askingForPermission: false,
+      deniedPermission: false
     };
   },
-  props: ['roomId'],
+  props: ['roomId', 'isMicRequired'],
   async created() {
     await this.logAsGuestIf()
     this.socketSetup();
@@ -99,16 +105,22 @@ export default {
         peer.destroy();
       }
 
-      try {
-        if (this.recordAudio == true) {
+      this.askingForPermission = true;
+        try {
           currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-        } else {
+          this.askingForPermission = false;
+        } catch (e) {
+          console.log("e: ", e);
+          this.askingForPermission = false;
+          this.deniedPermission = true;
           currentStream = undefined;
+          console.log("this.isMicRequired: ", this.isMicRequired);
+
+          if (this.isMicRequired == true) {
+            return Promise.reject("Denied Permission")
+          }
+          console.log("still alive");
         }
-      } catch (e) {
-        console.log("e: ", e);
-        currentStream = undefined;
-      }
 
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, stream: currentStream});
       peer.on('stream', stream => {
@@ -159,7 +171,19 @@ export default {
           console.log("PUSHING SIGNAL");
           this.incomingSignals[seed].push(signal);
         }
+      });
 
+      playRoomOn("user-disconnected", async({id}) => {
+        console.log("THIS SOCKET ID DISCONNECTED: ", id);
+        if (this.adminSocketId == id) {
+          this.connectedSeed = null;
+          await this.fetchAllData();
+
+          if (this.store.connectedConvo == null) {
+            this.isFirstContact = false;
+            this.socketConnectedToConvo = false;
+          }
+        }
       });
     },
 
@@ -225,17 +249,21 @@ export default {
     },
     async joinRoom() {
       this.isFirstContact = true;
-      await this.simplePeerSetup();
-      this.hasAcceptedCall = true;
+      try {
+        await this.simplePeerSetup();
+        this.hasAcceptedCall = true;
 
-      await apiRequest("client/join-convo", {
-        socketRoomId: this.socketRoomId
-        });
-      await this.fetchAllData();
-      await this.socketConnectToConvo();
+        await apiRequest("client/join-convo", {
+          socketRoomId: this.socketRoomId
+          });
+        await this.fetchAllData();
+        await this.socketConnectToConvo();
 
-      if (this.lastAdminSeed == null) {
-        playRoomEmit("client/request-for-signal", {})
+        if (this.lastAdminSeed == null) {
+          playRoomEmit("client/request-for-signal", {})
+        }
+      } catch (e) {
+        console.log("Microphone denied");
       }
     },
     async leaveRoom() {

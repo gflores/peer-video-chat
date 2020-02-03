@@ -22,6 +22,7 @@ export default {
     button {
         &:hover {
             cursor: pointer;
+            opacity: 0.88;
         }
     }
 </style>

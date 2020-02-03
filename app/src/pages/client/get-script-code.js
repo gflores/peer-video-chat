@@ -1,7 +1,7 @@
 function getScriptCode(id) {
   return `
     <script type="text/javascript">
-      Silverchat = {init({roomId, selector}){this.roomId=roomId;this.selector=selector}}
+      Silverchat={init(d){this.d = d;}}
     </script>
     <script type="text/javascript">
       Silverchat.init({roomId: "${id}", selector: ".silverchat-location"});

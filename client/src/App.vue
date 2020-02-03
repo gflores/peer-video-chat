@@ -1,5 +1,5 @@
 <template>
-    <PlayClient :roomId="roomId" class="silverchat-widget"/>
+    <PlayClient :roomId="roomId" :isMicRequired="isMicRequired" class="silverchat-widget"/>
 </template>
 
 <script>
@@ -10,8 +10,7 @@ export default {
     components: {
         PlayClient
     },
-    props: ['roomId']
-
+    props: ['roomId', 'isMicRequired']
 }
 </script>
 
@@ -23,5 +22,11 @@ export default {
         color: #26292c;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+    }
+    button {
+        &:hover {
+            cursor: pointer;
+            opacity: 0.88;
+        }
     }
 </style>
