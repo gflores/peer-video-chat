@@ -18,7 +18,7 @@ app.use(require('request-ip').mw());
 // app.use(middlewares.exceptionMiddleware);
  
 app.get('/', (req, res) => {
-    res.json({message: 'ok'});
+    res.json({message: 'ok', env: process.env.NODE_ENV});
 });
  
 const port = process.env.PORT || 4000;
