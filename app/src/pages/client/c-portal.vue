@@ -59,6 +59,9 @@ import store from "store";
 import SimplePeer from "simple-peer";
 import adapter from 'webrtc-adapter';
 import moment from 'moment';
+import webNotification from 'simple-web-notification';
+
+window.webNotification = webNotification;
 
 let peer = null;
 
@@ -119,7 +122,7 @@ export default {
     },
     async socketConnectToRoom() {
       if (this.store.connectedRoom != null && this.socketConnectedToRoom == false) {
-        Notification.requestPermission();
+        webNotification.requestPermission();
         this.socketConnectedToRoom = true;
         return playRoomEmit("admin/join-room", {});
       }
@@ -292,7 +295,7 @@ export default {
       });
       await this.fetchAllData();
       await this.socketConnectToRoom();
-      Notification.requestPermission();
+      webNotification.requestPermission();
     },
     async endConvo() {
       await apiRequest("admin/end-convo", {});
@@ -331,12 +334,10 @@ export default {
     waitingConvos() {
       let res = this.convos.filter(c => c.state == "waiting");
       if (res.length > 0) {
-        navigator.serviceWorker.getRegistration().then(r => {
-          r.showNotification('Someone calling...', {
-            body: `${res.length} ${res.length == 1 ? "visitor" : "visitors"} sent a request to connect`,
-            tag: `${notificationSeed}/${res.length}`,
-            vibrate: [100, 160, 220, 320]
-          })
+        webNotification.showNotification('Someone calling...', {
+          body: `${res.length} ${res.length == 1 ? "visitor" : "visitors"} sent a request to connect`,
+          tag: `${notificationSeed}/${res.length}`,
+          vibrate: [100, 160, 220, 320]
         });
       }
       return res;
