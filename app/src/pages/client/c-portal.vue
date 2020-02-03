@@ -334,11 +334,15 @@ export default {
     waitingConvos() {
       let res = this.convos.filter(c => c.state == "waiting");
       if (res.length > 0) {
-        webNotification.showNotification('Someone calling...', {
-          body: `${res.length} ${res.length == 1 ? "visitor" : "visitors"} sent a request to connect`,
-          tag: `${notificationSeed}/${res.length}`,
-          vibrate: [100, 160, 220, 320]
-        });
+        try {
+          webNotification.showNotification('Someone calling...', {
+            body: `${res.length} ${res.length == 1 ? "visitor" : "visitors"} sent a request to connect`,
+            tag: `${notificationSeed}/${res.length}`,
+            vibrate: [100, 160, 220, 320]
+          });
+        } catch (e) {
+        }
+        
       }
       return res;
     },
