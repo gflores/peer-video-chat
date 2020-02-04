@@ -2,7 +2,7 @@
   .team(v-if="isDataReady")
     h2 {{team.name}}
     .users
-      .user(v-for="user in users") {{user.firstName}}
+      .user(v-for="user in users") <b>{{user.firstName}} {{user.lastName}}</b> - {{user.email}}
 
     h3 Invite new Member
     input(v-model="email" placeholder="email")

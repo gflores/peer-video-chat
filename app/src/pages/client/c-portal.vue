@@ -17,6 +17,7 @@
           button.grey(@click="leaveRoom()") Leave Room
         //- 4
         template(v-else)
+          video.client-video(muted="muted" playsinline="playsinline")
           .text You are connected to a visitor
           button.grey(@click="endConvo()") End Conversation
 
@@ -342,7 +343,7 @@ export default {
           });
         } catch (e) {
         }
-        
+
       }
       return res;
     },
@@ -488,5 +489,7 @@ export default {
       margin-top: 20px;
     }
   }
-
+  .client-video {
+    display: none;
+  }
 </style>

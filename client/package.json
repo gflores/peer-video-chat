@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "vue-cli-service serve --port 3010",
-    "dev-build": "vue-cli-service build --mode dev-build && cross-env NODE_ENV=development node hint-gen.js > dist/silverchat-client.js",
+    "dev-build": "vue-cli-service build --mode dev-build && cross-env NODE_ENV=development node hint-gen.js > dist/silverchat-client.js && npm run serve",
     "build": "vue-cli-service build && cross-env NODE_ENV=production node hint-gen.js > dist/silverchat-client.js",
     "serve": "node server.js"
   },

@@ -82,5 +82,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .dashboard {
+    padding: 20px;
+  }
+  h2 {
+    margin-top: 20px;
+  }
 
+  .team {
+    margin-bottom: 10px;
+  }
+  .teams, .admins {
+    margin-left: 20px;
+  }
 </style>
