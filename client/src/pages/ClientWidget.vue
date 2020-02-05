@@ -9,7 +9,7 @@
           button.instant-call(@click="joinRoom()")
             span.bolt-wrapper
               Bolt.left
-            | Instant Call
+            | Start a conversation
             span.bolt-wrapper
               Bolt.right
 
