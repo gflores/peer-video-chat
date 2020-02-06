@@ -60,7 +60,6 @@ export default {
     border-bottom: 2px solid #fff;
     height: 24px;
     margin-bottom: 4px;
-    color: white;
   }
   label {
     display: block;
@@ -69,8 +68,8 @@ export default {
 
   button {
     width: 100%;
-    background: white;
-    color: hsla(0, 0%, 10%, 1);
+    background: #08a608;
+    color: white;
     border: 0;
     height: 50px;
     font-weight: bold;

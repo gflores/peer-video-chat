@@ -7,11 +7,11 @@
         template(v-if="store.connectedConvo == null")
           //- p Not Connected to any room
           button.instant-call(@click="joinRoom()")
-            span.bolt-wrapper
-              Bolt.left
+            //- span.bolt-wrapper
+            //-   Bolt.left
             | Start a conversation
-            span.bolt-wrapper
-              Bolt.right
+            //- span.bolt-wrapper
+            //-   Bolt.right
 
         template(v-else)
           button.reconnect-call(@click="answerCall()") Reconnect call
@@ -302,13 +302,18 @@ export default {
     width: 100%;
     height: 100%;
     color: white;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 700;
     background: hsla(120, 91%, 34%, 1);
     border: 0;
     border-radius: 4px;
-    height: 55px;
+    height: 60px;
     display: block;
+
+    @media only screen and (min-width: 1680px) {
+      height: 72px;
+      font-size: 32px;
+    }
   }
 
   video {

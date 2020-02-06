@@ -116,7 +116,7 @@ export default {
     width: 100%;
     display: flex;
     justify-content: center;
-    background: hsla(200, 20%, 96%, 1);
+    background: white;
   }
   a {
     color: #26292c;

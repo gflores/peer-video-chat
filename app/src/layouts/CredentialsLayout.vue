@@ -1,7 +1,9 @@
 <template lang="pug">
   .credentials-layout
     .top
-      .logo Silverchat
+      .logo
+        span Silver
+        span chat
       .content
         component(v-bind:is="page")
     .bottom
@@ -30,22 +32,22 @@ export default {
     position: absolute;
     width: 100%;
     height: 100%;
-    color: white;
+    color: #26292c;
   }
   .top {
-    background-image: linear-gradient(158deg, hsl(120, 91%, 34%), hsla(150, 67%, 49%, 1));
-    height: 91%;
+    background-image: white;
+    height: 92%;
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    @media only screen and (min-width: 720px) {
-      height: 70.41485%;
-    }
+    // @media only screen and (min-width: 720px) {
+    //   height: 70.41485%;
+    // }
 
 
     .logo {
-      margin-top: 80px;
+      margin-top: 60px;
       font-family: 'PantonBlack';
       font-size: 45px;
     }
@@ -54,10 +56,10 @@ export default {
     }
   }
   .bottom {
-    background: black;
-    height: 9%;
-    @media only screen and (min-width: 720px) {
-      height: 29.58515%;
-    }
+    background: hsla(210, 14%, 6%, 1);
+    height: 8%;
+    // @media only screen and (min-width: 720px) {
+    //   height: 29.58515%;
+    // }
   }
 </style>
