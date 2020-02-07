@@ -90,8 +90,8 @@ export default {
 
   button {
     width: 100%;
-    background: white;
-    color: hsla(0, 0%, 10%, 1);
+    background: #08a608;
+    color: white;
     border: 0;
     height: 50px;
     font-weight: bold;
