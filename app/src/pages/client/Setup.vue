@@ -2,8 +2,7 @@
   .setup
     .box {{codeContent}}
     .instruction <b>{{instruction}}</b>
-    .instruction It will replace the html element that has the class: <b>.silverchat-location</b>
-    .instruction Example: <b>{{example}}</b>
+    .instruction The CSS class of the container is <b>.silverchat-container</b>
 
 </template>
 

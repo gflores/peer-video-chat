@@ -7,11 +7,12 @@ function getScriptCode(id) {
       Silverchat.init({roomId: "${id}", selector: ".silverchat-location"});
     </script>
     <script src="${process.env.VUE_APP_SERVER_URL}silverchat-client.js" defer></script>
+    <div class="silverchat-container"><div class="silverchat-location"></div></div>
   `;
 };
 
 function getInstruction() {
-  return `Paste this code inside the </head> or </body> tag`;
+  return `Insert this code as a JavasScript or HTML element.`;
 }
 
 function getExample() {
