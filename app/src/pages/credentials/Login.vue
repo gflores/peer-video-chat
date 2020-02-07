@@ -57,7 +57,7 @@ export default {
     width: 100%;
     background: transparent;
     border: 0;
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid #26292c;
     height: 24px;
     margin-bottom: 4px;
   }

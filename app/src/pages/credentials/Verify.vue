@@ -73,16 +73,15 @@ export default {
   }
   .text {
     margin-bottom: 30px;
-    color: hsla(0, 0%, 90%, 1)
+    color: #26292c
   }
   input {
     width: 100%;
     background: transparent;
     border: 0;
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid #26292c;
     height: 24px;
     margin-bottom: 4px;
-    color: white;
   }
   label {
     display: block;
