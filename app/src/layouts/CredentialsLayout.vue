@@ -2,8 +2,8 @@
   .credentials-layout
     .top
       .logo
-        span Silver
-        span chat
+        span.silver Silver
+        span.chat chat
       .content
         component(v-bind:is="page")
     .bottom
@@ -36,7 +36,7 @@ export default {
   }
   .top {
     background-image: white;
-    height: 92%;
+    height: 93%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -50,6 +50,14 @@ export default {
       margin-top: 60px;
       font-family: 'PantonBlack';
       font-size: 45px;
+
+      .silver {
+        color: #515f6b;
+      }
+      .chat {
+        color: #26bf26;
+      }
+
     }
     .content {
       margin-top: 50px;
@@ -57,7 +65,7 @@ export default {
   }
   .bottom {
     background: hsla(210, 14%, 6%, 1);
-    height: 8%;
+    height: 7%;
     // @media only screen and (min-width: 720px) {
     //   height: 29.58515%;
     // }
