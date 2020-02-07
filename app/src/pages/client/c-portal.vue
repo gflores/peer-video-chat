@@ -25,7 +25,7 @@
         //- 3
         template(v-if="store.connectedRoom != null && store.connectedConvo == null && waitingConvos.length > 0")
           template(v-if="isFirstContact == false")
-            .text <b>A visitor is calling</b>
+            .text <b>Someone is calling</b>
             button(@click="recordVideo = true; nextConvo()") Video Call
             button.border.green(@click="recordVideo = false; nextConvo()") Voice Only
           template(v-else)
@@ -63,6 +63,9 @@ import moment from 'moment';
 import webNotification from 'simple-web-notification';
 
 window.webNotification = webNotification;
+
+let alarmAudio = new Audio("/sounds/alarm.mp3");
+alarmAudio.loop = true;
 
 let peer = null;
 
@@ -334,8 +337,10 @@ export default {
   computed: {
     waitingConvos() {
       let res = this.convos.filter(c => c.state == "waiting");
-      if (res.length > 0) {
+      if (res.length > 0 && this.store.connectedRoom != null && this.store.connectedConvo == null) {
+        
         try {
+          alarmAudio.play();
           webNotification.showNotification('Someone calling...', {
             body: `${res.length} ${res.length == 1 ? "visitor" : "visitors"} sent a request to connect`,
             tag: `${notificationSeed}/${res.length}`,
@@ -349,6 +354,14 @@ export default {
     },
     previewLink() {
       return process.env.VUE_APP_SERVER_URL + "?id=" + this.room.socketRoomId
+    }
+  },
+  watch: {
+    isFirstContact(val) {
+      if (val == true) {
+          alarmAudio.currentTime = 0
+          alarmAudio.pause();
+      }
     }
   }
 }

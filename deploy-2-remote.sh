@@ -11,9 +11,9 @@ npm run build
 now=$(pm2 pid $projectName"_api")
 if [ -z $now ]; 
 then
-pm2 start dist/server.js --name $projectName"_api"
+pm2 start dist/server.js --name $projectName"_api" --time
 else
-pm2 restart $projectName"_api"
+pm2 restart $projectName"_api" --time
 fi
 
 
@@ -22,9 +22,9 @@ npm install --production
 now=$(pm2 pid $projectName"_client")
 if [ -z $now ]; 
 then
-pm2 start server.js --name $projectName"_client"
+pm2 start server.js --name $projectName"_client" --time
 else
-pm2 restart $projectName"_client"
+pm2 restart $projectName"_client" --time
 fi
 
 
@@ -33,7 +33,7 @@ npm install --production
 now=$(pm2 pid $projectName"_app")
 if [ -z $now ]; 
 then
-pm2 start server.js --name $projectName"_app"
+pm2 start server.js --name $projectName"_app" --time
 else
-pm2 restart $projectName"_app"
+pm2 restart $projectName"_app" --time
 fi

@@ -65,15 +65,16 @@ async function exceptionMiddleware(req, res, next){
   catch (e){
     res.send(500);
 
-    let recipients = ['flores.gael@gmail.com']
+    
+    let recipients = process.env.NODE_ENV == 'dev' ? ['flores.gael@gmail.com'] : ['flores.gael@gmail.com', "nihaojulius@gmail.com"];
 
     var logObject = createLogObject(req, res, null, e);
 
-    let message = `Uncaught Exception at BlitzRPS Server: \n ${JSON.stringify(logObject, null, 2)}`;
+    let message = `Uncaught Exception at Silverchat: \n ${JSON.stringify(logObject, null, 2)}`;
     logger.error(message);
 
     recipients.forEach(async (email) => {
-      await sendRawEmail(email, "Uncaught Error in BlitzRPS", message.split("\n").join("<br/>"));
+      await sendRawEmail(email, "Uncaught Error in Silverchat", message.split("\n").join("<br/>"));
     })
 
     await Logs.insert(logObject);
@@ -110,6 +111,7 @@ function createLogObject(req, res, resBody, error){
   if (error){
     logObject = {
       level: 'error',
+      env: process.env.NODE_ENV,
       userId: req.user ? req.user._id : undefined,
       userEmail : req.user ? req.user.email : undefined,
       method: req.method,
@@ -127,6 +129,7 @@ function createLogObject(req, res, resBody, error){
   else {
     logObject = {
       level: 'info',
+      env: process.env.NODE_ENV,
       userId: req.user ? req.user._id : undefined,
       userEmail : req.user ? req.user.email : undefined,
       method: req.method,

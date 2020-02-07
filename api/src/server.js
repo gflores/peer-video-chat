@@ -14,8 +14,9 @@ app.use(morgan('tiny'));
 app.use(cors());
 app.use(bodyParser.json());
 app.use(require('request-ip').mw());
-// app.use(middlewares.loggerMiddleware);
-// app.use(middlewares.exceptionMiddleware);
+
+app.use(middlewares.loggerMiddleware);
+app.use(middlewares.exceptionMiddleware);
  
 app.get('/', (req, res) => {
     res.json({message: 'ok', env: process.env.NODE_ENV});

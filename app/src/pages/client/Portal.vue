@@ -17,12 +17,7 @@ export default {
   .portal {
     height: 100%;
     width: 100%;
-  }
-
-  @media only screen and (min-width: 600px) {
-    .portal {
-      width: 600px;
-    }
+    max-width: 500px;
   }
 
 </style>
