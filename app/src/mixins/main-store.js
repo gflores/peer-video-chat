@@ -5,6 +5,7 @@ import { apiRequest, playRoomEmit} from "~/src/lib/api.js";
 var storeObject = {
   user: null,
   team: null,
+  mainRoom: null,
   connectedConvo: null,
   connectedRoom: null
 }
@@ -41,11 +42,11 @@ Vue.mixin({
     async storeMyProfile() {
       try {
         if (store.get("authToken") != null) {          
-          let {user, team, room} = await apiRequest("my-profile", {});
-          console.log("Receiving: ");
+          let {user, team, mainRoom} = await apiRequest("my-profile", {});
+          console.log("Receiving: ", mainRoom);
           this.setUser(user);
           this.setTeam(team);
-          this.setRoom(room);
+          this.setMainRoom(mainRoom);
         }
       } catch (e) {}
     },
@@ -55,8 +56,8 @@ Vue.mixin({
     setTeam(team) {
       this.store.team = team;
     },
-    setRoom(room) {
-      this.store.room = room;
+    setMainRoom(room) {
+      this.store.mainRoom = room;
     },
     logoutUser(){
       store.remove("authToken");

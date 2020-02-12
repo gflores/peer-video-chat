@@ -7,6 +7,9 @@
     input(v-model="teamName" placeholder="name")
     button(@click="createTeam") Create Team
 
+    h2 Demos
+    router-link(to="/admin/demo/booking") Booking Demo
+
     h2 Admins
     .admins
       .admin(v-for="admin in admins") {{admin.firstName}} {{admin.lastName}} {{admin.email}} {{admin.isVerified ? "" : "-UNVERIFIED-"}}
@@ -17,6 +20,8 @@
     input(v-model="firstName" placeholder="first name")
     input(v-model="lastName" placeholder="last name")
     button(@click="inviteAdmin") Invite Admin
+
+
 </template>
 
 <script>

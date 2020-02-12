@@ -1,6 +1,8 @@
 <template lang="pug">
   .admin-layout(v-if="isDataReady")
-    div Admin Space - Welcome {{store.user.firstName}}
+    div
+      router-link(to="/admin") Admin Space 
+      | - Welcome {{store.user.firstName}}
       .nav-item(@click="logout") Logout
       component(v-bind:is="page")
 

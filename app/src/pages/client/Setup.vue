@@ -17,7 +17,7 @@ export default {
   },
   computed: {
     codeContent() {
-      return getScriptCode(this.store.room.socketRoomId);
+      return getScriptCode(this.store.mainRoom.socketRoomId);
     },
     instruction() {
       return getInstruction();

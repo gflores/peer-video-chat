@@ -1,6 +1,5 @@
 <template lang="pug">
   .team(v-if="isDataReady")
-    a(href="/admin") Back
     h2 {{team.name}}
     .users
       .user(v-for="user in users") <b>{{user.firstName}} {{user.lastName}}</b> {{user.email}}  <i>(Verified: {{user.isVerified ? "YES" : "NO"}})</i>

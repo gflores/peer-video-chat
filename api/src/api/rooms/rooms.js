@@ -3,7 +3,7 @@ import Rooms from "~/src/models/rooms.js";
 import Users from "~/src/models/users";
 import Convos from "~/src/models/convos.js";
 
-import { authMiddleware, memberAuthMiddleware } from "~/src/lib/middlewares";
+import { authMiddleware, memberAuthMiddleware, managerAuthMiddleware } from "~/src/lib/middlewares";
 
 app.post("/create-room", authMiddleware, async (req, res) => {
   let {
@@ -77,7 +77,9 @@ app.post("/get-room-stats", memberAuthMiddleware, async (req, res) => {
   if (room == null) {
     return res.status(400).json({message: "Room doesn't exist"});
   }
-  if (room.teamId.toString() != req.user.teamId.toString()) {
+  if (room.teamId == null && req.user.isAdmin == true) {
+    console.log(`OK. cos [${room.socketRoomId}] has no team, and you're an admin`);
+  } else if (room.teamId.toString() != req.user.teamId.toString()) {
     return res.status(400).json({message: "You don't belong to that team"});    
   }
 
@@ -99,7 +101,9 @@ app.post("/admin/join-room", memberAuthMiddleware, async (req, res) => {
   if (room == null) {
     return res.status(400).json({message: "Room doesn't exist"});
   }
-  if (room.teamId.toString() != req.user.teamId.toString()) {
+  if (room.teamId == null && req.user.isAdmin == true) {
+    console.log(`OK. cos [${room.socketRoomId}] has no team, and you're an admin`);
+  } else if (room.teamId.toString() != req.user.teamId.toString()) {
     return res.status(400).json({message: "You don't belong to that team"});    
   }
   let alrConnectedRoom = await Rooms.findOne({admins: req.user._id,});
@@ -143,3 +147,107 @@ app.post("/admin/leave-room", authMiddleware, async (req, res) => {
   });
 });
 
+app.post("/agent/add-question", managerAuthMiddleware, async (req, res) => {
+  let {
+    socketRoomId,
+    isMandatory,
+    questionText,
+    answerTexts
+  } = req.body;
+
+  let room = await Rooms.findOne({socketRoomId: socketRoomId});
+  if (room == null) {
+    return res.status(400).json({message: "Room doesn't exist"});
+  }
+  if (room.teamId == null && req.user.isAdmin == true) {
+    console.log(`OK. cos [${room.socketRoomId}] has no team, and you're an admin`);
+  } else if (room.teamId.toString() != req.user.teamId.toString()) {
+    return res.status(400).json({message: "You don't belong to that team"});    
+  }
+  
+  if (room.introQuestions == null) {
+    room.introQuestions = [];
+  }
+  room.introQuestions.push({
+    isMandatory,
+    questionText,
+    answers: answerTexts.map(a => ({answerText: a}))
+  });
+
+  await Rooms.update(room._id, {
+    $set: {
+      introQuestions: room.introQuestions
+    }
+  });
+
+  res.json({
+    message: "ok"
+  });
+});
+
+app.post("/agent/add-question", managerAuthMiddleware, async (req, res) => {
+  let {
+    socketRoomId,
+    isMandatory,
+    questionText,
+    answerTexts
+  } = req.body;
+
+  let room = await Rooms.findOne({socketRoomId: socketRoomId});
+  if (room == null) {
+    return res.status(400).json({message: "Room doesn't exist"});
+  }
+  if (room.teamId == null && req.user.isAdmin == true) {
+    console.log(`OK. cos [${room.socketRoomId}] has no team, and you're an admin`);
+  } else if (room.teamId.toString() != req.user.teamId.toString()) {
+    return res.status(400).json({message: "You don't belong to that team"});    
+  }
+  
+  if (room.introQuestions == null) {
+    room.introQuestions = [];
+  }
+  room.introQuestions.push({
+    isMandatory,
+    questionText,
+    answers: answerTexts.map(a => ({answerText: a}))
+  });
+
+  await Rooms.update(room._id, {
+    $set: {
+      introQuestions: room.introQuestions
+    }
+  });
+
+  res.json({
+    message: "ok"
+  });
+});
+
+app.post("/agent/update-button-start-text", managerAuthMiddleware, async (req, res) => {
+  let {
+    socketRoomId,
+    buttonStartText
+  } = req.body;
+
+  let room = await Rooms.findOne({socketRoomId: socketRoomId});
+  if (room == null) {
+    return res.status(400).json({message: "Room doesn't exist"});
+  }
+  if (room.teamId == null && req.user.isAdmin == true) {
+    console.log(`OK. cos [${room.socketRoomId}] has no team, and you're an admin`);
+  } else if (room.teamId.toString() != req.user.teamId.toString()) {
+    return res.status(400).json({message: "You don't belong to that team"});    
+  }
+  
+  room.buttonStartText = buttonStartText;
+
+  await Rooms.update(room._id, {
+    $set: {
+      buttonStartText: room.buttonStartText
+    }
+  });
+
+  res.json({
+    message: "ok"
+  });
+});

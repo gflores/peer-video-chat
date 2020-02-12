@@ -40,12 +40,12 @@ app.post("/my-profile", authMiddleware, async (req, res) => {
   if (req.user.teamId != null) {
     let [team, room] = await Promise.all([
       Teams.findOne(req.user.teamId),
-      Rooms.findOne({teamId: req.user.teamId})
+      Rooms.findOne({socketRoomId: req.user.teamId.toString() + "/main"})
     ])
     res.json({
       user: req.user,
       team: team,
-      room: room
+      mainRoom: room
     });
   } else {
     res.json({

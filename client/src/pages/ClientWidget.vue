@@ -6,18 +6,20 @@
       template(v-if="isFirstContact == false")
         template(v-if="store.connectedConvo == null")
           //- p Not Connected to any room
-          button.instant-call(@click="joinRoom()")
-            //- span.bolt-wrapper
-            //-   Bolt.left
-            | Start a conversation
-            //- span.bolt-wrapper
-            //-   Bolt.right
-
+          button.instant-call(@click="haveIntroQuestions ? isFirstContact = true : tryJoinRoom()") {{buttonStartText}}
         template(v-else)
           button.reconnect-call(@click="answerCall()") Reconnect call
+      
+      template(v-else-if="haveIntroQuestions && store.connectedConvo == null")
+        .questions
+          .question(v-for="(introQuestion, qi) in room.introQuestions")
+            .text {{introQuestion.questionText}}
+            .answers
+              .answer(v-for="(answer, i) in introQuestion.answers" :class="selectedAnswers[qi] == i ? 'selected' : ''" @click="selectedAnswers[qi] = i") {{answer.answerText}}
+        button(@click="tryJoinRoom()") Live Call
+
 
       template(v-else-if="connectedSeed == null")
-        
         .calling-msg(v-if="askingForPermission") Please Allow Microphone
         .calling-msg(v-else-if="deniedPermission && isMicRequired") Microphone Denied :(
         .calling-msg(v-else) {{deniedPermission ? "One-way call..." : "Calling..."}}
@@ -67,11 +69,14 @@ export default {
       adminSocketId: null,
       isFirstContact: false,
       askingForPermission: false,
-      deniedPermission: false
+      deniedPermission: false,
+      selectedAnswers: {0: null, 1: null, 2: null}
     };
   },
   props: ['roomId', 'isMicRequired'],
   async created() {
+    console.log("ClientWidget roomId: ", this.roomId);
+
     await this.logAsGuestIf()
     this.socketSetup();
     await this.fetchAllData();
@@ -247,15 +252,25 @@ export default {
         this.incomingSignals[this.lastAdminSeed] = null;
       }
     },
-    async joinRoom() {
+    async doJoinConvo(){
+      await apiRequest("client/join-convo", {
+        socketRoomId: this.socketRoomId,
+        introAnswers: this.selectedAnswers
+      });
+    },
+
+    async tryJoinRoom() {
       this.isFirstContact = true;
+      if (this.canJoinConvo == false) {
+        console.log("Have questions, please submit first");
+        return ;
+      }
       try {
         await this.simplePeerSetup();
         this.hasAcceptedCall = true;
 
-        await apiRequest("client/join-convo", {
-          socketRoomId: this.socketRoomId
-          });
+        await this.doJoinConvo();
+
         await this.fetchAllData();
         await this.socketConnectToConvo();
 
@@ -275,12 +290,75 @@ export default {
   computed: {
     socketRoomId() {
       return this.roomId;
+    },
+    buttonStartText(){
+      return this.room.buttonStartText ? this.room.buttonStartText : "Start a conversation";
+    },
+    haveIntroQuestions() {
+      return this.room.introQuestions != null && this.room.introQuestions.length > 0;
+    },
+    canJoinConvo () {
+      return this.haveIntroQuestions == false || (this.haveIntroQuestions == true);
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+  .questions {
+    .question {
+      display: flex;
+      // padding: 15px 0px;
+      // margin-bottom: 15px;
+      // border: #26292c 1px solid;
+      background: hsla(208, 20%, 96%, 1);
+      margin-bottom: 1px;
+
+      &:nth-child(odd) {
+        background: hsla(120, 51%, 96%, 1);
+      }
+
+      .text {
+        // font-size: 20px;
+        width: 28%;
+        padding: 0px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: hsla(210, 5%, 26%, 1);
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .answers {
+        display: flex;
+        flex-grow: 1;
+        // padding-right: 15px;
+
+        .answer {
+          margin: 1px 0;
+          line-height: 58px;
+          text-align: center;
+          // border: #26292c 1px solid;
+          // border-radius: 5px;
+          flex: 1;
+          border-radius: 2px;
+          cursor: pointer;
+
+          &:hover {
+            font-weight: bold;
+            color: black;
+            background: hsla(210, 30%, 90%, 1)
+          }
+          &.selected {
+            font-weight: bold;
+            color: black;
+            background: hsla(120, 40%, 68%, 1);
+
+          }
+        }
+      }
+    }
+  }
   .play-client {
     position: relative;
     width: 100%;
@@ -298,6 +376,7 @@ export default {
     background: hsla(120, 91%, 34%, 1);
   }
   button {
+    outline: 0;
     font-family: 'Source Sans Pro', sans-serif;
     width: 100%;
     height: 100%;

@@ -1,6 +1,6 @@
 <template lang="pug">
   .portal
-    portal(:socketRoomId="store.room.socketRoomId")
+    portal(:socketRoomId="store.mainRoom.socketRoomId")
 
 </template>
 

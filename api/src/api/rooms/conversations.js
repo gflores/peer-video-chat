@@ -32,7 +32,7 @@ app.post("/get-current-convo", authMiddleware, async (req, res) => {
 });
 
 app.post("/client/join-convo", authMiddleware, async (req, res) => {
-  let { socketRoomId } = req.body;
+  let { socketRoomId, introAnswers } = req.body;
 
   let room = await Rooms.findOne({socketRoomId});
   if (room == null) {
@@ -42,7 +42,8 @@ app.post("/client/join-convo", authMiddleware, async (req, res) => {
   let convo = await Convos.insert({
     clientId: req.user._id,
     roomId: room._id,
-    state: "waiting"
+    state: "waiting",
+    introAnswers: introAnswers
   });
 
   await Users.update({_id: req.user._id},

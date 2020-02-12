@@ -16,6 +16,7 @@ import TestRooms from './pages/test/Rooms.vue';
 import AdminLayout from './layouts/AdminLayout.vue';
 import AdminDashboard from './pages/admin/Dashboard.vue';
 import AdminTeam from './pages/admin/Team.vue';
+import AdminBookingDemo from './pages/admin/demo/BookingDemo.vue';
 
 import CredentialsLayout from './layouts/CredentialsLayout.vue';
 import Login from './pages/credentials/Login.vue';
@@ -43,6 +44,7 @@ export default new Router({
     // {path: "/admin/", redirect: "/admin/dashboard"},
     {path: "/admin", component: AdminLayout, props: {page: AdminDashboard}},
     {path: "/admin/teams/:id", component: AdminLayout, props: {page: AdminTeam}},
+    {path: "/admin/demo/booking", component: AdminLayout, props: {page: AdminBookingDemo}},
 
     {path: "/test", redirect: "/test/rooms"},
     {path: "/test/rooms", component: PlayLayout, props: {page: TestRooms}},
