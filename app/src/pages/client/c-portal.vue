@@ -14,11 +14,14 @@
         //- 2 & 3
         template(v-else-if="store.connectedConvo == null")
           .text.green You are online
+          .text(v-if="store.connectedRoom.socketRoomId != socketRoomId") Connected to another room ({{store.connectedRoom.socketRoomId}})
+
           button.grey(@click="leaveRoom()") Leave Room
         //- 4
         template(v-else)
           video.client-video(muted="muted" playsinline="playsinline")
-          .text You are connected to a visitor
+          .text(v-if="peerConnectionFinalized == false") Connecting...
+          .text.connected(v-else) Connected to a visitor.
           button.grey(@click="endConvo()") End Conversation
 
       .action-panel
@@ -57,7 +60,15 @@
 <script>
 import { apiRequest, playRoomEmit, playRoomOn, getSocketId } from '~/src/lib/api.js';
 import store from "store";
-import SimplePeer from "simple-peer";
+import SimplePeer from "simple-peer/simplepeer.min.js";
+
+window.req = require;
+
+// setTimeout(() => {
+//   window.SimplePeer = SimplePeer;
+//   console.log("switch!!!");
+// }, 5000)
+
 import adapter from 'webrtc-adapter';
 import moment from 'moment';
 import webNotification from 'simple-web-notification';
@@ -101,7 +112,8 @@ export default {
       clientSocketId: null,
       mySignals: [],
       lastPeerSetupDate: null,
-      totalConvos: null
+      totalConvos: null,
+      peerConnectionFinalized: false
     };
   },
   async created() {
@@ -138,6 +150,8 @@ export default {
       }
     },
     async simplePeerSetup() {
+      this.peerConnectionFinalized = false;
+
       if (this.lastPeerSetupDate == null || moment() - this.lastPeerSetupDate > 2000) {
         this.lastPeerSetupDate = moment();
       } else {
@@ -165,6 +179,8 @@ export default {
       }
 
       peer = new SimplePeer({ initiator: true, trickle: true, stream: currentStream, config: StunTurnList});
+      this.store.peer = peer;
+      window.thePeer = peer;
 
       peer.on('stream', stream => {
         console.log("receiving the vid");
@@ -192,13 +208,27 @@ export default {
       });
       peer.on('connect', () => {
         console.log("I'M CONNECTED !");
-      })
-      peer.on('close', async () => {
+        this.peerConnectionFinalized = true;
+        this.sendPeerMessage({native: true, method: 'adminName', data: this.store.user.firstName});
+        if (this.recordVideo == true){
+          this.sendPeerMessage({native: true, method: 'adminShowProfile', data: false});
+        }
+      }),
+
+      peer.on('close', async () => {        
         console.log("CONNECTION WAS CLOSED !!");
         await this.simplePeerSetup();
       })
     },
+    async sendPeerMessage(data) {
+      peer.send(JSON.stringify(data));
+    },
     async updateUserMediaStream(){
+      if (this.recordVideo == false) {
+        this.sendPeerMessage({native: true, method: 'adminShowProfile', data: true});
+      } else {
+        this.sendPeerMessage({native: true, method: 'adminShowProfile', data: false});
+      }
       try {
         peer.removeStream(currentStream);
       } catch(e) {
@@ -283,6 +313,8 @@ export default {
       });
       playRoomOn("user-disconnected", ({id}) => {
         console.log("THIS SOCKET ID DISCONNECTED: ", id);
+        this.peerConnectionFinalized = false;
+
       });
     },
     async tryConnectIncomingSignal() {
@@ -373,6 +405,10 @@ export default {
     width: 100%;
     background: white;
     position: relative;
+  }
+  .connected {
+    font-weight: bold;
+    color: #26bf26;
   }
   .top-section {
     width: 100%;

@@ -23,6 +23,25 @@
           input(v-model="answerTexts[i]" :placeholder="`Answer ${i + 1}`" type="text")
           br
         button(@click="submitNewQuestion") Add New Question
+    .second-row
+      .col
+        button(:class="selectedImageName == 'screen1-1.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen1-1.PNG')") Screen 1-1
+        button(:class="selectedImageName == 'screen1-2.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen1-2.PNG')") Screen 1-2
+        button(:class="selectedImageName == 'screen2.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen2.PNG')") Screen 2
+        button.sublevel(:class="selectedImageName == 'igloo1.jpg' ? 'selected' : ''" @click="changeRemotePicture('igloo1.jpg')") Igloo1
+        button.sublevel(:class="selectedImageName == 'igloo2.jpg' ? 'selected' : ''" @click="changeRemotePicture('igloo2.jpg')") Igloo2
+        button.sublevel(:class="selectedImageName == 'cloud-room1.jpg' ? 'selected' : ''" @click="changeRemotePicture('cloud-room1.jpg')") Cloud Room 1
+        button.sublevel(:class="selectedImageName == 'cloud-room2.jpg' ? 'selected' : ''" @click="changeRemotePicture('cloud-room2.jpg')") Cloud Room 2
+        button.sublevel(:class="selectedImageName == 'warehouse1.jpg' ? 'selected' : ''" @click="changeRemotePicture('warehouse1.jpg')") Warehouse 1
+        button.sublevel(:class="selectedImageName == 'warehouse2.jpg' ? 'selected' : ''" @click="changeRemotePicture('warehouse2.jpg')") Warehouse 2
+        button(:class="selectedImageName == 'screen3.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen3.PNG')") Screen 3
+        button(:class="selectedImageName == 'screen4.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen4.PNG')") Screen 4
+        button(:class="selectedImageName == 'screen5.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen5.PNG')") Screen 5
+        button(:class="selectedImageName == 'screen6.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen6.PNG')") Screen 6
+        button(:class="selectedImageName == 'screen7.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen7.PNG')") Screen 7
+        button(:class="selectedImageName == 'screen8.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen8.PNG')") Screen 8
+      .col
+        img.preview-picture(v-if="selectedImageName != null" :src="getImageUrl(selectedImageName)")
 
 </template>
 
@@ -39,7 +58,8 @@ export default {
       isMandatory: false,
       answerTexts: ["","",""],
       room: null,
-      isDataReady: false
+      isDataReady: false,
+      selectedImageName: null
     };
   },
   async created() {
@@ -47,6 +67,13 @@ export default {
     this.isDataReady = true;
   },
   methods: {
+    async changeRemotePicture(name) {
+      this.selectedImageName = name;
+      this.sendPeerMessage({method: "changePicture", data: this.getImageUrl(name)});
+    },
+    async sendPeerMessage(data) {
+      this.store.peer.send(JSON.stringify(data));
+    },
     async fetchAllData() {
       let {room, convos} = await apiRequest("admin/get-room", {socketRoomId: this.socketRoomId});
       this.room = room;
@@ -75,8 +102,10 @@ export default {
         return this.store.connectedConvo.introAnswers[qIndex] == aIndex;
       }
       return false;
+    },
+    getImageUrl(name) {
+      return process.env.VUE_APP_WEBSITE_URL + "/images/booking/" + name;
     }
-
   },
   computed: {
     socketRoomId(){
@@ -115,5 +144,29 @@ export default {
         }
       }
     }
+  }
+
+  .second-row {
+    display: flex;
+    justify-content: space-between;
+
+    .selected {
+      border: hsla(180, 100%, 59%, 1) 5px solid;
+    }
+    button {
+      margin-bottom: 8px;
+    }
+    .sublevel {
+      margin-left: 30px;
+      margin-bottom: 2px;
+
+    }
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+  }
+  .preview-picture {
+    width: 100%;
   }
 </style>

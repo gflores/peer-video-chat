@@ -9,7 +9,11 @@ const fs = require('fs');
 const middlewares = require('./lib/middlewares');
 
 const app = express();
- 
+
+let publicPath = path.resolve(__dirname, '../public');
+console.log("publicPath: ", publicPath);
+app.use('/assets', express.static(publicPath));
+
 app.use(morgan('tiny'));
 app.use(cors());
 app.use(bodyParser.json());

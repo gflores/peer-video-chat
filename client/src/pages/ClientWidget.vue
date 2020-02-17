@@ -4,13 +4,13 @@
       //- div Room is {{room.name}}
 
       template(v-if="isFirstContact == false")
-        template(v-if="store.connectedConvo == null")
+        template(v-if="store.connectedConvo == null || store.connectedRoom.socketRoomId != socketRoomId")
           //- p Not Connected to any room
           button.instant-call(@click="haveIntroQuestions ? isFirstContact = true : tryJoinRoom()") {{buttonStartText}}
         template(v-else)
           button.reconnect-call(@click="answerCall()") Reconnect call
       
-      template(v-else-if="haveIntroQuestions && store.connectedConvo == null")
+      template(v-else-if="haveIntroQuestions && (store.connectedConvo == null || store.connectedRoom.socketRoomId != socketRoomId)")
         .questions
           .question(v-for="(introQuestion, qi) in room.introQuestions")
             .text {{introQuestion.questionText}}
@@ -24,8 +24,13 @@
         .calling-msg(v-else-if="deniedPermission && isMicRequired") Microphone Denied :(
         .calling-msg(v-else) {{deniedPermission ? "One-way call..." : "Calling..."}}
 
-      template(v-else)
-        video(muted="muted" playsinline="playsinline")
+      .rows(v-else)
+        .profile-section(:style="adminShowProfile == false ? 'display: none' : ''")
+          img.profile-picture(:src="profilePictureUrl")
+          .online-indicator
+          .handle-name {{adminName}}
+        video(:style="adminShowProfile ? 'display: none' : ''" muted="muted" playsinline="playsinline")
+
         //- button(@click="leaveRoom()") Leave Room
 
         //- p {{recordAudio ? "Your Microphone is ON" : "Your Microphone is OFF"}}
@@ -39,7 +44,9 @@
 <script>
 import { apiRequest, playRoomEmit, playRoomOn, getSocketId } from '~/src/lib/api.js';
 import store from "store";
-import SimplePeer from "simple-peer";
+import SimplePeer from "simple-peer/simplepeer.min.js";
+
+// window.SimplePeer = SimplePeer;
 
 let peer = null;
 
@@ -53,6 +60,7 @@ let connectTimer = null;
 let currentStream;
 
 export default {
+  props: ['roomId', 'isMicRequired'],
   data() {
     return {
       isDataReady: false,
@@ -70,10 +78,11 @@ export default {
       isFirstContact: false,
       askingForPermission: false,
       deniedPermission: false,
-      selectedAnswers: {0: null, 1: null, 2: null}
+      selectedAnswers: {0: null, 1: null, 2: null},
+      adminShowProfile: true,
+      adminName: ""
     };
   },
-  props: ['roomId', 'isMicRequired'],
   async created() {
     console.log("ClientWidget roomId: ", this.roomId);
 
@@ -128,6 +137,7 @@ export default {
         }
 
       peer = new SimplePeer({initiator: false, trickle: false, config: StunTurnList, stream: currentStream});
+      window.thePeer = peer;
       peer.on('stream', stream => {
         console.log("receiving the vid");
         // got remote video stream, now let's show it in a video tag
@@ -154,6 +164,29 @@ export default {
       peer.on('close', () => {
         console.log("CONNECTION WAS CLOSED !!");
       })
+
+      peer.on('data', data => {
+        let buffer = new TextDecoder("utf-8").decode(data);
+        let obj = JSON.parse(buffer);
+        console.log("peer-data: ", obj);
+        if (obj.native == true) {
+          switch(obj.method){
+            case "adminShowProfile":
+              this.adminShowProfile = obj.data;
+              break;
+            case "adminName":
+              this.adminName = obj.data;
+              break;
+
+              
+          }
+        } else if (window.SilverchatController != null) {
+          console.log("SilverchatController: ", obj);
+          window.SilverchatController[obj.method](obj);
+        } else {
+          console.log("No controller");
+        }
+      });
     },
 
     socketSetup(){
@@ -266,6 +299,12 @@ export default {
         return ;
       }
       try {
+
+        if (this.store.connectedConvo != null && this.store.connectedRoom.socketRoomId != this.socketRoomId) {
+          console.log("leaving room first !");
+          await this.leaveRoom();
+        }
+
         await this.simplePeerSetup();
         this.hasAcceptedCall = true;
 
@@ -278,7 +317,7 @@ export default {
           playRoomEmit("client/request-for-signal", {})
         }
       } catch (e) {
-        console.log("Microphone denied");
+        console.log("?Microphone denied?", e);
       }
     },
     async leaveRoom() {
@@ -299,6 +338,14 @@ export default {
     },
     canJoinConvo () {
       return this.haveIntroQuestions == false || (this.haveIntroQuestions == true);
+    },
+    profilePictureUrl() {
+      if (this.adminName == "Gael") {
+        return process.env.VUE_APP_API_URL + 'assets/gael-profile.jpg';
+      } else if (this.adminName == "Julius") {
+        return process.env.VUE_APP_API_URL + 'assets/julius-profile.jpg';
+      }
+      return process.env.VUE_APP_API_URL + 'assets/default-profile.png';
     }
   }
 }
@@ -359,6 +406,11 @@ export default {
       }
     }
   }
+  .rows {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
   .play-client {
     position: relative;
     width: 100%;
@@ -392,6 +444,33 @@ export default {
     @media only screen and (min-width: 1680px) {
       height: 72px;
       font-size: 32px;
+    }
+  }
+
+  .profile-section {
+    position: relative;
+    max-width: 160px;
+
+    .profile-picture {
+      width: 100%;
+      display: block;
+    }
+    .online-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 100%;
+      background: hsla(120, 80%, 50%, 1);
+      position: absolute;
+      top: 2px;
+      right: 2px;
+    }
+    .handle-name {
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      text-align: center;
+      color: white;
+      background: rgba(0, 0, 0, 0.8);
     }
   }
 
