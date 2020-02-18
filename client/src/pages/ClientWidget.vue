@@ -449,7 +449,7 @@ export default {
 
   .profile-section {
     position: relative;
-    max-width: 160px;
+    max-width: 140px;
 
     .profile-picture {
       width: 100%;

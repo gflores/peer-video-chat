@@ -35,8 +35,10 @@ export default {
     color: #26292c;
   }
   .top {
+    padding-bottom: 30px;
+    box-sizing: border-box;
     background-image: white;
-    height: 93%;
+    min-height: 93%;
     display: flex;
     flex-direction: column;
     align-items: center;
