@@ -25,8 +25,7 @@
         button(@click="submitNewQuestion") Add New Question
     .second-row
       .col
-        button(:class="selectedImageName == 'screen1-1.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen1-1.PNG')") Screen 1-1
-        button(:class="selectedImageName == 'screen1-2.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen1-2.PNG')") Screen 1-2
+        button(:class="selectedImageName == 'intro-record.mp4' ? 'selected' : ''" @click="changeRemotePicture('intro-record.mp4')") PLAY date booking
         button(:class="selectedImageName == 'screen2.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen2.PNG')") Screen 2
         button.sublevel(:class="selectedImageName == 'igloo1.jpg' ? 'selected' : ''" @click="changeRemotePicture('igloo1.jpg')") Igloo1
         button.sublevel(:class="selectedImageName == 'igloo2.jpg' ? 'selected' : ''" @click="changeRemotePicture('igloo2.jpg')") Igloo2
@@ -41,7 +40,8 @@
         button(:class="selectedImageName == 'screen7.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen7.PNG')") Screen 7
         button(:class="selectedImageName == 'screen8.PNG' ? 'selected' : ''" @click="changeRemotePicture('screen8.PNG')") Screen 8
       .col
-        img.preview-picture(v-if="selectedImageName != null" :src="getImageUrl(selectedImageName)")
+        video(v-if="selectedImageName != null && selectedImageName.includes('.mp4')" :src="getImageUrl(selectedImageName)" autoplay)
+        img.preview-picture(v-else-if="selectedImageName != null" :src="getImageUrl(selectedImageName)")
 
 </template>
 

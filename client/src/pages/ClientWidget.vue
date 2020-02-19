@@ -16,7 +16,7 @@
             .text {{introQuestion.questionText}}
             .answers
               .answer(v-for="(answer, i) in introQuestion.answers" :class="selectedAnswers[qi] == i ? 'selected' : ''" @click="selectedAnswers[qi] = i") {{answer.answerText}}
-        button(@click="tryJoinRoom()") Live Call
+        button.light-pulse(@click="tryJoinRoom()") Live Call
 
 
       template(v-else-if="connectedSeed == null")
@@ -214,6 +214,7 @@ export default {
       playRoomOn("user-disconnected", async({id}) => {
         console.log("THIS SOCKET ID DISCONNECTED: ", id);
         if (this.adminSocketId == id) {
+          window.location.reload();
           this.connectedSeed = null;
           await this.fetchAllData();
 
@@ -377,6 +378,7 @@ export default {
         font-size: 14px;
       }
       .answers {
+        font-size: 18px;
         display: flex;
         flex-grow: 1;
         // padding-right: 15px;
@@ -447,6 +449,21 @@ export default {
     }
   }
 
+  @keyframes pulse {
+    from {opacity: 0.95;}
+    to {opacity: 0.65;}
+  }
+  @keyframes light-pulse {
+    from {opacity: 1;}
+    to {opacity: 0.7;}
+  }
+  .light-pulse {
+    animation-name: light-pulse;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in;
+    animation-direction: alternate;
+  }
   .profile-section {
     position: relative;
     max-width: 140px;
@@ -463,6 +480,12 @@ export default {
       position: absolute;
       top: 2px;
       right: 2px;
+
+      animation-name: pulse;
+      animation-duration: 1.2s;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in;
+      animation-direction: alternate;
     }
     .handle-name {
       width: 100%;

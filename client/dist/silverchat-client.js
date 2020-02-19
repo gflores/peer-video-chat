@@ -2,14 +2,14 @@ let host = 'https://client.silverchat.co'
 
 let links = [
   `<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700&display=swap" rel=stylesheet>`,
-  `<link href=${host}/css/app.09dca09a.css rel=preload as=style>`,
-  `<link href=${host}/js/app.bb504d33.js rel=preload as=script>`,
+  `<link href=${host}/css/app.46c57c7a.css rel=preload as=style>`,
+  `<link href=${host}/js/app.a05566a6.js rel=preload as=script>`,
   `<link href=${host}/js/chunk-vendors.b1c704fb.js rel=preload as=script>`,
-  `<link href=${host}/css/app.09dca09a.css rel=stylesheet>`,
+  `<link href=${host}/css/app.46c57c7a.css rel=stylesheet>`,
 ]
 let scripts = [
   `${host}/js/chunk-vendors.b1c704fb.js`,
-  `${host}/js/app.bb504d33.js`,
+  `${host}/js/app.a05566a6.js`,
 ]
 
 links.forEach(link => {
