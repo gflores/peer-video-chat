@@ -3,11 +3,11 @@ import logger from "./logger";
 import fs from 'fs';
 import path from 'path';
 
-let defaultFromAddress = "contact@silverchat.co";
+let defaultFromAddress = "Silverchat <contact@silverchat.co>";
 let transporter = nodemailer.createTransport({
   host: "smtp.sendgrid.net",
-  port: 587,
-  secure: false, // upgrade later with STARTTLS
+  port: 465,
+  secure: true, // upgrade later with STARTTLS
   auth: {
     user: "apikey",
     pass: "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"
