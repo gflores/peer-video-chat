@@ -35,9 +35,14 @@ async function apiRequest(path, data) {
 }
 
 async function playRoomEmit(handleName, data) {
-  return new Promise((resolve) => {
-    playRoomSocket.emit(handleName, data, store.get("authToken"), (response) => {
-      resolve(response);
+  return new Promise((resolve, reject) => {
+    playRoomSocket.emit(handleName, data, store.get("authToken"), (response, error) => {
+      if (error != null) {
+        console.log("Socket error, [" + handleName + "], error: " + error);
+        reject(error);
+      } else {
+        resolve(response);
+      }
     });
   });
 }

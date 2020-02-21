@@ -171,6 +171,9 @@ async function onAdminJoinRoom({}, authToken, responseCb) {
   let room = await Rooms.findOne({
     admins: user._id,
   });
+  if (room == null) {
+    return responseCb(null, "room is null");
+  }
   this.join("room#" + room._id);
 
   console.log("this.rooms: ", this.rooms);

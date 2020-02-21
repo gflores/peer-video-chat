@@ -117,6 +117,7 @@ export default {
     };
   },
   async created() {
+    console.log("cportal");
     await this.logAsGuestIf()
     this.socketSetup();
 
@@ -140,7 +141,12 @@ export default {
       if (this.store.connectedRoom != null && this.socketConnectedToRoom == false) {
         webNotification.requestPermission();
         this.socketConnectedToRoom = true;
-        return playRoomEmit("admin/join-room", {});
+        return playRoomEmit("admin/join-room", {}).catch(async e => {
+          await apiRequest("admin/end-convo", {});
+          window.location.reload();
+
+          return new Promise(() => {});
+        });
       }
     },
     async socketConnectToConvo() {

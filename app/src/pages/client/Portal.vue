@@ -1,15 +1,15 @@
 <template lang="pug">
   .portal
-    portal(:socketRoomId="store.mainRoom.socketRoomId")
+    cPortal(:socketRoomId="store.mainRoom.socketRoomId")
 
 </template>
 
 <script>
 
-import portal from "./c-portal.vue";
+import cPortal from "./c-portal.vue";
 
 export default {
-  components: {portal}
+  components: {cPortal}
 }
 </script>
 
