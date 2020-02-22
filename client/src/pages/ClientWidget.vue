@@ -162,6 +162,9 @@ export default {
         console.log("I'M CONNECTED !");
       })
       peer.on('close', () => {
+        try {
+          window.SilverchatController["disconnect"]();
+        } catch (e) {console.log("e: ", e)}
         console.log("CONNECTION WAS CLOSED !!");
       })
 
@@ -177,12 +180,13 @@ export default {
             case "adminName":
               this.adminName = obj.data;
               break;
-
-              
           }
         } else if (window.SilverchatController != null) {
           console.log("SilverchatController: ", obj);
-          window.SilverchatController[obj.method](obj);
+          try {
+            window.SilverchatController[obj.method](obj);
+          } catch (e) {console.log("e: ", e)}
+
         } else {
           console.log("No controller");
         }
@@ -215,6 +219,10 @@ export default {
         console.log("THIS SOCKET ID DISCONNECTED: ", id);
         if (this.adminSocketId == id) {
           // window.location.reload();
+          try {
+            window.SilverchatController["disconnect"]();
+          } catch (e) {console.log("e: ", e)}
+
           this.connectedSeed = null;
           await this.fetchAllData();
 
