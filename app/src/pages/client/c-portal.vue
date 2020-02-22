@@ -7,16 +7,21 @@
 
     .container-flex
       .status-panel
+        //- 0.1
+        template(v-if="isConnectedToAnotherRoom == true")
+          .text Already connected to another room ({{store.connectedRoom.socketRoomId}})
+          button.grey(@click="leaveRoom()") Leave Other Room
+
         //- 1
-        template(v-if="store.connectedRoom == null")
+        template(v-else-if="isConnectedToThisRoom == false")
           .text You are offline
           button.green(@click="joinRoom()") Join Room
-        //- 2 & 3
-        template(v-else-if="store.connectedConvo == null")
-          .text.green You are online
-          .text(v-if="store.connectedRoom.socketRoomId != socketRoomId") Connected to another room ({{store.connectedRoom.socketRoomId}})
 
+        //- 2 & 3
+        template(v-else-if="isConnectedToConvo == false")
+          .text.green You are online
           button.grey(@click="leaveRoom()") Leave Room
+
         //- 4
         template(v-else)
           video.client-video(muted="muted" playsinline="playsinline")
@@ -25,8 +30,13 @@
           button.grey(@click="endConvo()") End Conversation
 
       .action-panel
+        //- 0.1
+        template(v-if="isConnectedToThisRoom == false")
+          .big-text(v-if="waitingConvos.length == 0") No callers
+          .big-text(v-else) <b>Someone is calling</b>
+
         //- 3
-        template(v-if="store.connectedRoom != null && store.connectedConvo == null && waitingConvos.length > 0")
+        template(v-else-if="isConnectedToThisRoom && isConnectedToConvo == false && waitingConvos.length > 0")
           template(v-if="isFirstContact == false")
             .text <b>Someone is calling</b>
             button(@click="recordVideo = true; nextConvo()") Video Call
@@ -35,7 +45,7 @@
             .big-text Connecting...
             
         //- 4
-        template(v-else-if="store.connectedConvo != null && hasAcceptedCall == true")
+        template(v-else-if="isConnectedToConvo && hasAcceptedCall == true")
           .text {{recordVideo ? "Your Camera is ON" : "Your Camera is OFF"}}
           template(v-if="recordVideo")
             button.border.grey(@click="recordVideo = !recordVideo; updateUserMediaStream()") Turn Video OFF
@@ -43,7 +53,7 @@
             button.border.green(@click="recordVideo = !recordVideo; updateUserMediaStream()") Turn Video ON
 
         //- 4.5
-        template(v-else-if="store.connectedConvo != null && hasAcceptedCall == false")
+        template(v-else-if="isConnectedToConvo && hasAcceptedCall == false")
           template(v-if="isFirstContact == false")
             .text Please reconnect
             button(@click="recordVideo = true; answerCall()") Reconnect with Video
@@ -51,9 +61,9 @@
           template(v-else)
             .big-text Connecting...
 
+        //- ???
         template(v-else)
-          .big-text(v-if="waitingConvos.length == 0") No callers
-          .big-text(v-else) <b>Someone is calling</b>
+          .text
         
 </template>
 
@@ -232,8 +242,14 @@ export default {
     async updateUserMediaStream(){
       if (this.recordVideo == false) {
         this.sendPeerMessage({native: true, method: 'adminShowProfile', data: true});
+        setTimeout(() => {
+          this.sendPeerMessage({native: true, method: 'adminShowProfile', data: true});
+        }, 1000);
       } else {
         this.sendPeerMessage({native: true, method: 'adminShowProfile', data: false});
+        setTimeout(() => {
+          this.sendPeerMessage({native: true, method: 'adminShowProfile', data: false});
+        }, 1000);
       }
       try {
         peer.removeStream(currentStream);
@@ -392,6 +408,18 @@ export default {
     },
     previewLink() {
       return process.env.VUE_APP_SERVER_URL + "?id=" + this.room.socketRoomId
+    },
+    isConnectedToARoom() {
+      return this.store.connectedRoom != null;
+    },
+    isConnectedToThisRoom(){
+      return this.isConnectedToARoom && this.store.connectedRoom.socketRoomId == this.socketRoomId;
+    },
+    isConnectedToAnotherRoom(){
+      return this.isConnectedToARoom && this.store.connectedRoom.socketRoomId != this.socketRoomId;
+    },
+    isConnectedToConvo() {
+      return this.store.connectedConvo != null;
     }
   },
   watch: {

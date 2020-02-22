@@ -214,7 +214,7 @@ export default {
       playRoomOn("user-disconnected", async({id}) => {
         console.log("THIS SOCKET ID DISCONNECTED: ", id);
         if (this.adminSocketId == id) {
-          window.location.reload();
+          // window.location.reload();
           this.connectedSeed = null;
           await this.fetchAllData();
 
