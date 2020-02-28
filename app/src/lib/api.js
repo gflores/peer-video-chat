@@ -12,11 +12,14 @@ function getSocketId() {
 
 async function apiRequest(path, data) {
   try {
+    console.log("START:", path);
+
     let res = await axios.post(host + path, data, {
       headers: {
         "Authorization": store.get("authToken")
       }
     });
+    console.log("END:", path);
   
     return res.data;
   }

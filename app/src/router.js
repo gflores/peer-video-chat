@@ -25,6 +25,7 @@ import ClientLayout from './layouts/ClientLayout.vue';
 import ClientDashboard from './pages/client/Dashboard.vue';
 import ClientPortal from './pages/client/Portal.vue';
 import ClientSetup from './pages/client/Setup.vue';
+import ClientAccount from './pages/client/Account.vue';
 
 Vue.use(Router)
 
@@ -36,10 +37,11 @@ export default new Router({
     // {path: "/", component: ClientLayout, props: {page: ClientDashboard}},
     {path: "/", component: ClientLayout, props: {page: ClientPortal}},
     {path: "/setup", component: ClientLayout, props: {page: ClientSetup}},
+    {path: "/account", component: ClientLayout, props: {page: ClientAccount}},
     
     {path: "/login", component: CredentialsLayout, props: {page: Login}},
     {path: "/verify/:verificationToken", component: CredentialsLayout, props: {page: Verify}},
-
+    
 
     // {path: "/admin/", redirect: "/admin/dashboard"},
     {path: "/admin", component: AdminLayout, props: {page: AdminDashboard}},

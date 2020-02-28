@@ -56,11 +56,20 @@ app.post("/admin/get-room", authMiddleware, async (req, res) => {
     return ;
   }
 
-  let convos = await Convos.find({
-    roomId: room._id,
-    state: {$in: ["waiting", "in-conversation"]}
-  }, {sort: {createdAt: -1}});
+  let [convos, totalConvos] = await Promise.all([
+      Convos.find({
+        roomId: room._id,
+        state: {$in: ["waiting", "in-conversation"]}
+      }, {sort: {createdAt: -1}})
+    ,
+      Convos.count({
+        roomId: room._id
+      })
+    ]
+  );
 
+  room.totalConvos = totalConvos;
+  
   res.json({
     room,
     convos

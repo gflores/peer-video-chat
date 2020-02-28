@@ -3,7 +3,7 @@
     .top-section
       a(:href="previewLink" target="_blank") Preview
       .square-counter.waiting-convo-nb {{waitingConvos.length}}
-      .square-counter.total-convo-nb {{this.totalConvos}}
+      .square-counter.total-convo-nb {{this.room.totalConvos}}
 
     .container-flex
       .status-panel
@@ -127,23 +127,25 @@ export default {
     };
   },
   async created() {
-    console.log("cportal");
     await this.logAsGuestIf()
     this.socketSetup();
 
     await this.fetchAllData();
 
     await Promise.all([this.socketConnectToRoom(), this.socketConnectToConvo()]);
-    await this.getStats();
     this.isDataReady = true;
     // await this.simplePeerSetup();
   },
   methods: {
     async fetchAllData() {
-      let [__, {room, convos}] = await Promise.all([
+      await Promise.all([
         this.storeConnectedRoom(),
-        apiRequest("admin/get-room", {socketRoomId: this.socketRoomId})
+        this.fetchRoomData()
       ]);
+    },
+    async fetchRoomData() {
+      let {room, convos} = await apiRequest("admin/get-room", {socketRoomId: this.socketRoomId});
+
       this.room = room;
       this.convos = convos;
     },
@@ -331,7 +333,7 @@ export default {
       playRoomOn("admin/notify-new-convo", async ({convo}) => {
         console.log("NEW CONVO: ", convo);
         this.convos.push(convo);
-        await this.getStats();
+        await this.fetchRoomData()
       });
       playRoomOn("user-disconnected", ({id}) => {
         console.log("THIS SOCKET ID DISCONNECTED: ", id);
@@ -382,11 +384,11 @@ export default {
       this.hasAcceptedCall = true;
       // this.tryConnectIncomingSignal();
     },
-    async getStats(){
-      let {totalConvos} = await apiRequest("get-room-stats", {roomId: this.room._id});
+    // async getStats(){
+    //   let {totalConvos} = await apiRequest("get-room-stats", {roomId: this.room._id});
 
-      this.totalConvos = totalConvos;
-    }
+    //   this.totalConvos = totalConvos;
+    // }
   },
   computed: {
     waitingConvos() {
@@ -451,7 +453,7 @@ export default {
     height: 40px;
     align-items: flex-end;
     a {
-      font-size: 24px;
+      font-size: 22px;
       text-decoration: none;
       color: grey;
     }
@@ -468,14 +470,14 @@ export default {
 
     &.waiting-convo-nb{
       position: absolute;
-      right: 0;
+      right: 20px;
       top: 0px;
       border: hsla(4, 65%, 54%, 1) 4px solid;
       color: hsla(4, 65%, 54%, 1);
     }
     &.total-convo-nb{
       position: absolute;
-      left: 0;
+      left: 20px;
       top: 0px;
       border: hsla(120, 36%, 48%, 1) 4px solid;
       color: hsla(120, 36%, 48%, 1);
@@ -550,9 +552,11 @@ export default {
   }
   
   .action-panel {
+    box-shadow: rgba(0, 0, 0, 0.025) 0px 0px 0px 1px, rgba(0, 0, 0, 0.075) 0px 5px 30px 0px, rgba(0, 0, 0, 0.025) 0px 3px 3px 0px;
+    
     padding: 20px 20px 40px;
     width: calc(100% - 40px);
-    background: hsl(120, 55%, 78%);
+    background: hsla(120, 34%, 92%, 1);
 
     .text {
       margin-bottom: 18px;

@@ -1,6 +1,7 @@
 <template lang="pug">
   .portal
-    cPortal(:socketRoomId="store.mainRoom.socketRoomId")
+    .title Portal
+    cPortal.content(:socketRoomId="store.mainRoom.socketRoomId")
 
 </template>
 
@@ -13,11 +14,24 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
   .portal {
     height: 100%;
     width: 100%;
-    max-width: 500px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
+  .title {
+    font-size: 30px;
+    font-weight: bold;
+    margin: 20px 20px 40px;
+    align-self: normal;
+  }
+
+  .content {
+    max-width: 500px;
+  }
 </style>
