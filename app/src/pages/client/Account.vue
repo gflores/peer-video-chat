@@ -21,9 +21,12 @@ export default {
 <style lang="scss" scoped>
   .title {
     font-size: 30px;
-    font-weight: bold;
+    font-weight: 600;
     margin: 20px 0px 40px;
     align-self: normal;
+    @media only screen and (min-width: 768px) {
+      margin: 30px 0px 45px;
+    }
   }
 
   .account {
@@ -32,6 +35,11 @@ export default {
     display: flex;
     padding: 0px 20px;
     flex-direction: column;
+
+    @media only screen and (min-width: 768px) {
+      padding: 0px 30px;
+    }
+
   }
   .content {
     flex-grow: 1;

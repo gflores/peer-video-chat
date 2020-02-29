@@ -26,9 +26,14 @@ export default {
 
   .title {
     font-size: 30px;
-    font-weight: bold;
+    font-weight: 600;
     margin: 20px 20px 40px;
     align-self: normal;
+
+    @media only screen and (min-width: 768px) {
+      margin: 30px 30px 45px;
+    }
+
   }
 
   .content {

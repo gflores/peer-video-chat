@@ -34,9 +34,13 @@ export default {
 <style lang="scss" scoped>
   .title {
     font-size: 30px;
-    font-weight: bold;
+    font-weight: 600;
     margin: 20px 0px 40px;
     align-self: normal;
+
+    @media only screen and (min-width: 768px) {
+      margin: 30px 0px 45px;
+    }
   }
 
   .setup {
@@ -47,7 +51,11 @@ export default {
 
     /* background: hsla(120, 34%, 92%, 1); */
     height: 100%;
-    width: 100%
+    width: 100%;
+
+    @media only screen and (min-width: 768px) {
+      padding: 0px 30px;
+    }
   }
   .box {
     height: min-content;

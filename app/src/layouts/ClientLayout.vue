@@ -5,6 +5,8 @@
     //-   .user-name Hi, {{store.user.firstName}}
 
     .nav-bar
+      .top-section
+        .team-name {{store.team.name}}
       router-link(to="/").nav-item(@click="logout") Portal
       router-link(to="/setup").nav-item(@click="logout") Install
       router-link(to="/account").nav-item(@click="logout") Account
@@ -87,37 +89,65 @@ export default {
     position: absolute;
     bottom: 0;
     width: 100%;
+    height: 48px;
 
     display: flex;
     justify-content: space-between;
 
-    height: 48px;
     box-sizing: border-box;
     // padding: 0 16px;
     // background: hsla(210, 4%, 90%, 1);
     background: hsl(210, 16%, 28%);
     color: hsla(210, 4%, 90%, 1); 
 
+    @media only screen and (min-width: 768px) {
+      width: 160px;
+      height: 100%;
+      flex-direction: column;
+      justify-content: inherit;
+    }
+
+    .top-section {
+      display: none;
+
+      @media only screen and (min-width: 768px) {
+        display: inherit;
+        margin: 20px 0px 25px;
+        padding-left: 15px;
+        .team-name {
+          font-family: 'PantonBlack';
+          font-size: 16px;
+          line-height: 1.1em;
+        }
+      }
+    }
+
     .nav-item {
       color: hsla(210, 4%, 90%, 1);       
       font-size: 16px;
       cursor: pointer;
-      padding: 0 16px;
-      height: 100%;
+      // padding: 0 16px;
+      // height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-grow: 1;
 
       @media only screen and (min-width: 768px) {
-        padding: 0px 48px;
+        // padding: 0px 48px;
+        flex-grow: inherit;
+        justify-content: inherit;
+        padding-left: 15px;
+        height: 40px;
+        margin-top: 5px;
       }
 
-      // &:hover {
-      //   background: lightgray;
-      // }
-      &.selected {
+      &:hover {
+        color: white;
+      }
+      &.router-link-exact-active {
         background: hsla(210, 20%, 40%, 1);
+        color: white;
       }
       // &.last {
       //   position: absolute;
@@ -127,12 +157,18 @@ export default {
     }
   }
   .content {
-    position: relative;
+    position: absolute;
     height: calc(100% - 48px);
     width: 100%;
     display: flex;
     justify-content: center;
     background: white;
+
+    @media only screen and (min-width: 768px) {
+      left: 160px;
+      width: calc(100% - 160px);
+      height: 100%;
+    }
   }
   a {
     color: #26292c;
